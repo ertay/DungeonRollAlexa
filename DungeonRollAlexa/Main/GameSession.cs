@@ -170,6 +170,60 @@ namespace DungeonRollAlexa.Main
             
         }
 
+        public SkillResponse DrinkPotions(IntentRequest request)
+        {
+            // drink potion requested let's check if number is valid
+            int numberOfPotions =Utilities.ParseInt(request.Intent.Slots["NumberOfPotions"].Value);
+            // plus one to graveyard because the die used to quaff potion can also be revived with a new face
+            string message = _dungeon.ValidateNumberOfPotions(numberOfPotions, _hero.Graveyard.Count + 1);
+            if(!string.IsNullOrEmpty(message))
+            {
+                // validation failed, send the error message to user
+                return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+            }
+            // we have a valid potion number let's check companion
+            string companion = request.Intent.Slots["SelectedCompanion"].Value;
+            if (!_hero.IsCompanionInParty(companion, true))
+            {
+                message = $"{companion} is not in your party. You can quaff potions with a companion present in your party. ";
+                return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+            }
+
+            // we have valid number and companion, save the revive counter and put the companion in the graveyard
+            Enum.TryParse(companion.FirstCharToUpper(), out CompanionType companionType);
+            message = _hero.DrinkPotions(numberOfPotions, companionType);
+            // set game state to reviving companions, we can't do anything else until this is finished
+            GameState = GameState.RevivingCompanions;
+            _lastResponseMessage = message;
+            SaveData();
+
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+
+        }
+
+        public SkillResponse ReviveCompanion(IntentRequest request)
+        {
+            // revive requested check game state first
+            string message = "";
+            if (GameState != GameState.RevivingCompanions)
+                return RepeatLastMessage("You can only revive companions after quaffing potions or elixirs. ");
+            // check if valid companion
+            string companion = request.Intent.Slots["SelectedCompanion"].Value;
+            bool isCompanionValid = Enum.TryParse(companion.FirstCharToUpper(), out CompanionType companionType);
+            if (!isCompanionValid)
+                return RepeatLastMessage($"{companion} is not a valid companion. You can revive fighter, cleric, mage, thief, champion, or scroll. ");
+            // we have a valid companion let's revive it
+            // first remove potion from dungeon
+            _dungeon.DrinkPotion();
+            message = _hero.ReviveCompanion(companionType);
+            if (_hero.RevivalsRemaining < 1)
+                message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
+            _lastResponseMessage = message;
+            SaveData();
+
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+        }
+
         public SkillResponse OpenChestAction(IntentRequest request)
         {
             // user wants to open chest

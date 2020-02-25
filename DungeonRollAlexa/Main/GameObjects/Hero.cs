@@ -28,6 +28,8 @@ namespace DungeonRollAlexa.Main.GameObjects
 
         public List<PartyDie> Graveyard { get; set; }
 
+        public int RevivalsRemaining { get; set; }
+
         public List<TreasureItem> Inventory { get; set; }
 
         public List<TreasureItem> UsedItems { get; set; }
@@ -175,11 +177,41 @@ namespace DungeonRollAlexa.Main.GameObjects
             return message;
         }
 
-        public bool IsCompanionInParty(string companionName)
+        public bool IsCompanionInParty(string companionName, bool includeScroll = false)
         {
             // checks if the companion is present in the party
+            if(includeScroll)
+                return PartyDice.Any(d => d.Name == companionName);
+            // don't include scrolls
             return PartyDice.Any(d => d.Companion != CompanionType.Scroll && d.Name == companionName);
         }
+
+        public string DrinkPotions(int numberOfPotions, CompanionType companion)
+        {
+            // puts the companion in the graveyard and saves the number of potions quaffed to track the revivals
+            RevivalsRemaining = numberOfPotions;
+            var partyDie = PartyDice.First(d => d.Companion == companion);
+            PartyDice.Remove(partyDie);
+            Graveyard.Add(partyDie);
+
+            return $"You used a {companion} to quaff potions. The number of remaining companion revivals is {RevivalsRemaining}. Say revive followed by the companion name to begin reviving. ";
+        }
+
+        public string ReviveCompanion(CompanionType companion)
+        {
+            // move a party die from graveyard to party dice then set the companion value
+            var partyDie = Graveyard[0];
+            Graveyard.RemoveAt(0);
+            partyDie.Companion = companion;
+            PartyDice.Add(partyDie);
+            RevivalsRemaining--;
+            if (RevivalsRemaining > 0)
+                return $"You added a {companion} to your party. Say revive to revive another companion. ";
+
+            // no more revivals
+            return $"You added a {companion} to your party. ";
+        }
+        
 
         public string GetPartyStatus()
         {

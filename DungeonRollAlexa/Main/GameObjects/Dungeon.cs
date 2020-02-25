@@ -31,10 +31,6 @@ namespace DungeonRollAlexa.Main.GameObjects
         [JsonIgnore]
         public bool HasChest => DungeonDice.Any(d => d.DungeonDieType == DungeonDieType.Chest);
 
-        public Dungeon()
-        {
-            TreasureItems = Utilities.GenerateTreasureItems();
-        }
         
         public GameState DetermineDungeonPhase()
         {// this method checks the status of the dungeon and returns a game state enum to determine which phase we should be in
@@ -73,6 +69,8 @@ namespace DungeonRollAlexa.Main.GameObjects
         {
             string message;
 
+            if (TreasureItems == null)
+                TreasureItems = Utilities.GenerateTreasureItems();
             Level = 1;
             DungeonDice = new List<DungeonDie>();
             DragonsLair = 0;
@@ -254,6 +252,31 @@ namespace DungeonRollAlexa.Main.GameObjects
             // used treasure items  are shuffled into the pool
             int randomIndex = ThreadSafeRandom.ThisThreadsRandom.Next(TreasureItems.Count);
             TreasureItems.Insert(randomIndex, treasure);
+        }
+
+        public void DrinkPotion()
+        {
+            // remove a potion from the dungeon dice
+            var potion = DungeonDice.First(d => d.DungeonDieType == DungeonDieType.Potion);
+            DungeonDice.Remove(potion);
+        }
+
+        public string ValidateNumberOfPotions(int requestedNumberOfPotions, int numberOfCompanionsInGraveyard)
+        {
+            // return empty string if number is valid, otherwise returns the error message
+            int availablePotions = DungeonDice.Count(d => d.DungeonDieType == DungeonDieType.Potion);
+
+            if (availablePotions < 1)
+                return "There are no potions available. ";
+            else if (requestedNumberOfPotions < 1)
+                return $"You provided an invalid number of potions. The number of potions that are currently available is {availablePotions}. ";
+            else if (availablePotions < requestedNumberOfPotions)
+                return $"The number of potions currently available is {availablePotions}. Try the quaff potion command again. ";
+            else if (requestedNumberOfPotions > numberOfCompanionsInGraveyard)
+                return $"The number of potions you can quaff can't be higher than the companions in your graveyard. ";
+
+            // no errors found proceed
+            return string.Empty;
         }
 
         public string GetDungeonStatus()

@@ -91,6 +91,7 @@ namespace DungeonRollAlexa
             switch (request.Intent.Name)
             {
                 case BuiltInIntent.Fallback:
+                    response = _gameSession.RepeatLastMessage("That is not a valid action. ");
                     break;
                 case BuiltInIntent.Yes:
                     response = _gameSession.ResolveYesIntent();
@@ -147,6 +148,12 @@ namespace DungeonRollAlexa
                     break;
                 case "OpenChestIntent":
                     response = _gameSession.OpenChestAction(request);
+                    break;
+                case "DrinkPotionIntent":
+                    response = _gameSession.DrinkPotions(request);
+                    break;
+                case "ReviveCompanionIntent":
+                    response = _gameSession.ReviveCompanion(request);
                     break;
                 case "SeekGloryIntent":
                     response = _gameSession.SeekGlory();

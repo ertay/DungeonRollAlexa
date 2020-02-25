@@ -8,6 +8,7 @@
         MonsterPhase,
         LootPhase,
         DragonPhase,
-        RegroupPhase
+        RegroupPhase,
+        RevivingCompanions
     }
 }

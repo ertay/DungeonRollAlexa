@@ -359,6 +359,82 @@ if(!_dungeon.HasChest)
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
         }
 
+        public SkillResponse DragonDiceSelection(IntentRequest request)
+        {
+            // handles party dice selection when fighting a dragon
+            string message = "";
+            // first check if we already have selected 3 distinct companions
+            int distinctCompanionCount = _hero.PartyDice.Count(d => d.IsSelected == true);
+            if (distinctCompanionCount > 2)
+            {
+                message = "You have already selected three companions of different type. To clear the selection and start over, say clear dice selection. ";
+                return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+            }
+            var validSlots = request.Intent.Slots.Where(s => s.Value.Value != null);
+            bool selectionApplied = false;
+            
+
+            foreach (var item in validSlots)
+            {
+                // if we already have selected 3, stop selection
+                if (distinctCompanionCount > 2)
+                    break;
+
+                bool isValidCompanion = Enum.TryParse(item.Value.Value.FirstCharToUpper(), out CompanionType companion);
+                if (!isValidCompanion || companion == CompanionType.Scroll)
+                {
+                    // invalid companion chosen, continue to next item
+                    continue;
+                }
+                // companion is valid, lets check if we have a companion like it that is selected already
+                var partyDie = _hero.PartyDice.FirstOrDefault(d => d.Companion == companion);
+                if (partyDie == null || partyDie.IsSelected)
+                    continue;
+                // if we are here, we have a valid companion that is not selected, let's select it
+                partyDie.IsSelected = true;
+                distinctCompanionCount++;
+                selectionApplied = true;
+                
+            }
+
+            if (selectionApplied)
+            {
+                string selection = string.Join(", ", _hero.PartyDice.Where(d => d.IsSelected).Select(d => d.Name).ToList());
+                if (distinctCompanionCount > 2)
+                    message = $"The current selection is:{selection}. To defeat the dragon, say defeat dragon! ";
+                else
+                    message = $"The current selection is:{selection}. Select {3 - distinctCompanionCount} more to defeat the dragon. ";
+                _lastResponseMessage = message;
+                SaveData();
+            }
+            else
+                message = "Invalid dice selection. You need to select three different companions in your party to defeat the dragon. ";
+
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+
+        }
+
+        public SkillResponse DefeatDragon()
+        {
+            if (GameState != GameState.DragonPhase)
+                return ResponseBuilder.Ask("You currently do not see a dragon you can attack. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+            // player wants to defeat dragon, let's check if they have 3 distinct dice
+            int distinctCompanionCount = _hero.PartyDice.Count(d => d.IsSelected);
+            if(distinctCompanionCount < 3)
+                return ResponseBuilder.Ask("You need to select three distinct companions to defeat the dragon. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+
+            // OK we have 3 party dice selected, let's kill the dragon
+            var treasure = _dungeon.DefeatDragon();
+            string message = _hero.DefeatDragon(treasure);
+            message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
+            _lastResponseMessage = message;
+            SaveData();
+
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+
+            
+        }
+
         /// <summary>
         /// Handles dice selection
         /// </summary>
@@ -366,12 +442,18 @@ if(!_dungeon.HasChest)
         /// <returns></returns>
         public SkillResponse SelectDice(IntentRequest request)
         {
-            if (GameState != GameState.DiceSelectionForScroll && GameState != GameState.PartyFormation)
+            if (GameState != GameState.DiceSelectionForScroll && GameState != GameState.PartyFormation && GameState != GameState.DragonPhase)
             {
                 // we are not in a dice selection phase
                 string errorMessage = "Invalid action. Dice selection can be done after using a scroll or when you are fighting the dragon.";
                 return ResponseBuilder.Ask(errorMessage, RepromptBuilder.Create(_lastResponseMessage), Session);
             }
+            // check if we are in dragon phase, we need a special selection for that
+            if(GameState == GameState.DragonPhase)
+            {
+                return DragonDiceSelection(request);
+            }
+            
             SkillResponse response = null;
             string message = "";
             var dieList = new List<Die>();
@@ -411,7 +493,7 @@ if(!_dungeon.HasChest)
 
         public SkillResponse ClearDiceSelection()
         {
-            if (GameState != GameState.DiceSelectionForScroll && GameState != GameState.PartyFormation)
+            if (GameState != GameState.DiceSelectionForScroll && GameState != GameState.PartyFormation && GameState != GameState.DragonPhase)
             {
                 string errorMessage = "Invalid action. Dice selection can be done after using a scroll or when you are fighting the dragon.";
                 return ResponseBuilder.Ask(errorMessage, RepromptBuilder.Create(_lastResponseMessage), Session);

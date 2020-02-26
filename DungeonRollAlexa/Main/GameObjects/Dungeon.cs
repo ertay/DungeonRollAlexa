@@ -208,6 +208,14 @@ namespace DungeonRollAlexa.Main.GameObjects
 
         }
 
+        public TreasureItem DefeatDragon()
+        {
+            DragonsLair = 0;
+            var treasure = TreasureItems[0];
+            TreasureItems.RemoveAt(0);
+            return treasure;
+        }
+
         public TreasureItem OpenChest()
         {
             // check if there are chests available to open

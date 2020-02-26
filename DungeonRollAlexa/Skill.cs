@@ -158,6 +158,9 @@ namespace DungeonRollAlexa
                 case "ReviveCompanionIntent":
                     response = _gameSession.ReviveCompanion(request);
                     break;
+                case "DefeatDragonIntent":
+                    response = _gameSession.DefeatDragon();
+                    break;
                 case "SeekGloryIntent":
                     response = _gameSession.SeekGlory();
                     break;

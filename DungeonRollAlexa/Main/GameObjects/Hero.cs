@@ -117,6 +117,21 @@ namespace DungeonRollAlexa.Main.GameObjects
             return message;
         }
 
+        public string DefeatDragon(TreasureItem treasureItem)
+        {
+            // player defeated dragon, let's remove the dice selection and move companions to graveyard
+            string selectedCompanions= string.Join(", ", PartyDice.Where(d => d.IsSelected).Select(d => d.Name).ToList());
+            int removedCount = PartyDice.RemoveAll(d => d.IsSelected);
+            // TODO: Use RemoveAll when using dice. Convert Graveyard from List to integer and just track the number of dice in the graveyard, no need to have the full list
+            Graveyard.Add(new PartyDie());
+            Graveyard.Add(new PartyDie());
+            Graveyard.Add(new PartyDie());
+
+            Inventory.Add(treasureItem);
+            string message = $"You used your {selectedCompanions} to defeat the dragon. You acquired {treasureItem.TreasureType.GetDescription()}. ";
+            return message;
+        }
+
         public string AcquireTreasureItems(CompanionType companion, List<TreasureItem> treasureItems)
         {
             // remove the companion from our party dice and add it to the graveyard

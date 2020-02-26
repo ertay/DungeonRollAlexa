@@ -333,6 +333,32 @@ if(!_dungeon.HasChest)
             return "";
         }
 
+        public SkillResponse UseScroll()
+        {
+            string message = "";
+
+            if (GameState != GameState.MonsterPhase)
+                return ResponseBuilder.Ask("Scrolls can only be used during the monster phase.", RepromptBuilder.Create(_lastResponseMessage), Session);
+
+            // we are in Monster phase let's check if we have a scroll
+            if (!_hero.IsCompanionInParty("scroll", true))
+            {
+                // scroll not in party
+                message = "You don't have a scroll in your party.";
+                return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session); 
+            }
+            // we have a scroll, let'let's set the game state to dice selection phase
+            // first move scroll to graveyard
+            _hero.UsePartyDie(CompanionType.Scroll);
+            GameState = GameState.DiceSelectionForScroll;
+
+            message = "You used a scroll. Say select followed by the dungeon or party dice names you want to select for rolling. ";
+            _lastResponseMessage = message;
+            SaveData();
+
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+        }
+
         /// <summary>
         /// Handles dice selection
         /// </summary>
@@ -340,6 +366,12 @@ if(!_dungeon.HasChest)
         /// <returns></returns>
         public SkillResponse SelectDice(IntentRequest request)
         {
+            if (GameState != GameState.DiceSelectionForScroll && GameState != GameState.PartyFormation)
+            {
+                // we are not in a dice selection phase
+                string errorMessage = "Invalid action. Dice selection can be done after using a scroll or when you are fighting the dragon.";
+                return ResponseBuilder.Ask(errorMessage, RepromptBuilder.Create(_lastResponseMessage), Session);
+            }
             SkillResponse response = null;
             string message = "";
             var dieList = new List<Die>();
@@ -379,6 +411,11 @@ if(!_dungeon.HasChest)
 
         public SkillResponse ClearDiceSelection()
         {
+            if (GameState != GameState.DiceSelectionForScroll && GameState != GameState.PartyFormation)
+            {
+                string errorMessage = "Invalid action. Dice selection can be done after using a scroll or when you are fighting the dragon.";
+                return ResponseBuilder.Ask(errorMessage, RepromptBuilder.Create(_lastResponseMessage), Session);
+            }
             var diceList = new List<Die>();
             diceList.AddRange(_hero.PartyDice);
                 diceList.AddRange(_dungeon.DungeonDice);
@@ -392,13 +429,23 @@ if(!_dungeon.HasChest)
 
         public SkillResponse RollSelectedDice()
         {
+            if (GameState != GameState.DiceSelectionForScroll && GameState != GameState.PartyFormation)
+            {
+                string errorMessage = "Invalid action. You can roll dice after using a scroll and selecting the dice you want to roll.";
+                return ResponseBuilder.Ask(errorMessage, RepromptBuilder.Create(_lastResponseMessage), Session);
+            }
+
             string message = "";
             message += _hero.RollSelectedDice();
             message += _dungeon.RollSelectedDice();
+            bool diceRolled = true;
             if (string.IsNullOrEmpty(message) || string.IsNullOrWhiteSpace(message))
+            {
                 message = "You need to select dice before rolling. For example, say select fighter. ";
-
-            message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
+                diceRolled = false;
+            }
+            if (diceRolled)
+                message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
             _lastResponseMessage = message;
             SaveData();
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(message), Session);

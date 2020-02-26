@@ -69,6 +69,16 @@ namespace DungeonRollAlexa.Main.GameObjects
             return message;
         }
 
+        public void UsePartyDie(CompanionType companion)
+        {
+            // TODO: Consider using this method everywhere Dice need to be moved from party to graveyard
+
+
+            var partyDie = PartyDice.First(d => d.Companion == companion);
+            PartyDice.Remove(partyDie);
+            Graveyard.Add(partyDie);
+        }
+
         public string RollSelectedDice()
         {
             bool partyDiceRolled = false;

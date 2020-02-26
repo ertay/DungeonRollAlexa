@@ -9,6 +9,7 @@
         LootPhase,
         DragonPhase,
         RegroupPhase,
-        RevivingCompanions
+        RevivingCompanions,
+        DiceSelectionForScroll,
     }
 }

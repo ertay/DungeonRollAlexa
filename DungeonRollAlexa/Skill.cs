@@ -134,6 +134,9 @@ namespace DungeonRollAlexa
                     //start a new game
                     response = _gameSession.SetupNewGame();
                     break;
+                case "ScrollDieIntent":
+                    response = _gameSession.UseScroll();
+                    break;
                     case "SelectDiceIntent":
                     response = _gameSession.SelectDice(request);
                     break;

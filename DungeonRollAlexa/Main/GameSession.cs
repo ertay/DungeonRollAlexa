@@ -248,8 +248,8 @@ if(!_dungeon.HasChest)
             // chest available let's open
             
             Enum.TryParse(companion.FirstCharToUpper(), out CompanionType companionType);
-            // if we have a thief we will open all chests
-            bool openAllChests = companionType == CompanionType.Thief ? true : false;
+            // if we have a thief or champion we will open all chests
+            bool openAllChests = (companionType == CompanionType.Thief || companionType == CompanionType.Champion) ? true : false;
             if(openAllChests)
             {
                 var treasureItems = _dungeon.OpenAllChests();

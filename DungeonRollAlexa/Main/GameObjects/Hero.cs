@@ -169,6 +169,43 @@ namespace DungeonRollAlexa.Main.GameObjects
             return message;
         }
 
+        public TreasureItem GetTreasureFromInventory(string treasureName)
+        {
+            return Inventory.FirstOrDefault(i => i.TreasureType.GetDescription().ToLower() == treasureName);
+        }
+
+        public string UseCompanionTreasure(TreasureItem treasure)
+        {
+            // we used a treasure item, remove it from inventory
+            Inventory.Remove(treasure);
+            string message = "";
+            PartyDie partyDie = new PartyDie();
+            partyDie.IsFromTreasureItem = true;
+
+            switch (treasure.TreasureType)
+            {
+                case TreasureType.VorpalSword:
+                    message = "You used your vorpal sword and added a fighter to your party. ";
+                    partyDie.Companion = CompanionType.Fighter;
+                    break;
+                case TreasureType.Talisman:
+                    message = "You used your talisman and added a cleric to your party. ";
+                    partyDie.Companion = CompanionType.Cleric;
+                    break;
+                case TreasureType.ScepterOfPower:
+                    message = "You used your scepter of power and added a mage to your party. ";
+                    partyDie.Companion = CompanionType.Mage;
+                    break;
+                case TreasureType.ThievesTools:
+                    message = "You used your thieves tools and added a thief to your party. ";
+                    partyDie.Companion = CompanionType.Thief;
+                    break;
+            }
+// insert the new companion in the beginning of the party dice
+            PartyDice.Insert(0, partyDie);
+            return message;
+        }
+
         public List<DungeonDieType> UseCompanionToAttack(string companion)
         {
             var partyDie = PartyDice.First(d => d.Name == companion);
@@ -245,6 +282,14 @@ namespace DungeonRollAlexa.Main.GameObjects
 
             return message;
 
+        }
+
+        public string GetInventoryStatus()
+        {
+            if (Inventory.Count < 1)
+                return "There are no items in your inventory. ";
+            string items = string.Join(", ", Inventory.Select(i => i.TreasureType.GetDescription()).ToList());
+            return $"Your inventory contains: {items}. ";
         }
 
         public virtual void ActivateSpecialty() { }

@@ -435,6 +435,109 @@ if(!_dungeon.HasChest)
             
         }
 
+        public SkillResponse UseTreasureItem(IntentRequest request)
+        {
+            // player wants to use item from inventory
+
+            if(GameState != GameState.MonsterPhase && GameState != GameState.LootPhase && GameState != GameState.DragonPhase)
+            {
+                // cannot use item in this phase
+                return ResponseBuilder.Ask("Items can only be used when you are fighting monsters, looting, or fighting the dragon. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+            }
+            // let's check if we have item in inventory
+            string selectedItem = request.Intent.Slots["SelectedTreasureItem"].Value;
+            TreasureItem item = _hero.GetTreasureFromInventory(selectedItem);
+            if (item == null)
+            {
+                // item is not in inventory
+                return ResponseBuilder.Ask($"{selectedItem} is not in your inventory. Say inventory to check your inventory. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+            }
+            // ok the item is present let's use it
+            string message = "";
+            switch (item.TreasureType)
+            {
+                case TreasureType.VorpalSword:
+                case TreasureType.Talisman:
+                case TreasureType.ScepterOfPower:
+                case TreasureType.ThievesTools:
+                    message += _hero.UseCompanionTreasure(item);
+                    break;
+                case TreasureType.Scroll:
+                    message += UseScrollTreasureItem(item);
+                    break;
+                case TreasureType.RingOfInvisibility:
+                    message += UseRingOfInvisibilityItem(item);
+                    break;
+                case TreasureType.DragonScales:
+                    message += "Each pair of dragon scales gives you two points at the end of the game. They do not have any special abilities. ";
+                    break;
+                case TreasureType.Elixir:
+                    message += UseElixirTreasureItem(item);
+                    break;
+                case TreasureType.DragonBait:
+                    message += UseDragonBaitTreasureItem(item);
+                    break;
+                case TreasureType.TownPortal:
+                    message += "Town portal is not implemented yet. ";
+                    // TODO: Implement town portal
+                    break;
+            }
+            _lastResponseMessage = message;
+            SaveData();
+
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+        }
+
+        private string UseDragonBaitTreasureItem(TreasureItem item)
+        {
+            if (GameState != GameState.MonsterPhase)
+                return "Dragon bait can only be used during the monster phase. ";
+            _hero.Inventory.Remove(item);
+            _dungeon.ReturnUsedTreasure(item);
+            int monsterCount= _dungeon.DungeonDice.Count(d => d.IsMonster);
+            _dungeon.DragonsLair += monsterCount;
+            _dungeon.DungeonDice.RemoveAll(d => d.IsMonster);
+            string pluralS= monsterCount == 1 ? "" : "s";
+            string message = $"You used dragon bait to transform{monsterCount} monster{pluralS} to dragon face{pluralS}. The number of dragon dice in the Dragon's Lair is {_dungeon.DragonsLair}. ";
+            message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
+            return message;
+        }
+
+        private string UseElixirTreasureItem(TreasureItem item)
+        {
+            if (_hero.Graveyard.Count < 1)
+                return "The graveyard is empty. Use an elixir when you want to revive a dead companion. ";
+            _hero.Inventory.Remove(item);
+            _dungeon.ReturnUsedTreasure(item);
+            GameState = GameState.RevivingCompanions;
+
+            return "You used an elixir. Say revive to revive a companion. ";
+        }
+
+        private string UseRingOfInvisibilityItem(TreasureItem item)
+        {
+            if (_dungeon.DragonsLair < 1)
+                return "There are no dragon dice in the Dragon's Lair. You don't need to use it. ";
+            _hero.Inventory.Remove(item);
+            _dungeon.ReturnUsedTreasure(item);
+            _dungeon.DragonsLair = 0;
+            string message = "You used a ring of invisibility. All dragon dice from the Dragon's Lair were discarded. ";
+            message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
+
+            return message;
+        }
+
+        private string UseScrollTreasureItem(TreasureItem item)
+        {
+            // player requested to use a scroll treasure item
+            if (GameState != GameState.MonsterPhase)
+                return "Scrolls can only be used during the monster phase. ";
+            _hero.Inventory.Remove(item);
+            _dungeon.ReturnUsedTreasure(item);
+            GameState = GameState.DiceSelectionForScroll;
+            return "You used a scroll treasure item. Say select followed by the dungeon or party dice names you want to select for rolling. ";
+        }
+
         /// <summary>
         /// Handles dice selection
         /// </summary>
@@ -583,6 +686,12 @@ if(!_dungeon.HasChest)
         public SkillResponse GetPartyStatus()
         {
             string message = _hero.GetPartyStatus();
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+        }
+
+        public SkillResponse GetInventoryStatus()
+        {
+            string message = _hero.GetInventoryStatus();
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
         }
 

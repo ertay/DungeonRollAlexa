@@ -161,6 +161,9 @@ namespace DungeonRollAlexa
                 case "DefeatDragonIntent":
                     response = _gameSession.DefeatDragon();
                     break;
+                case "UseTreasureItemIntent":
+                    response = _gameSession.UseTreasureItem(request);
+                    break;
                 case "SeekGloryIntent":
                     response = _gameSession.SeekGlory();
                     break;
@@ -177,7 +180,7 @@ namespace DungeonRollAlexa
                     response = _gameSession.GetDungeonStatus();
                     break;
                 case "InventoryIntent":
-                    // TODO: Add inventory status
+                    response = _gameSession.GetInventoryStatus();
                     break;
             }
 

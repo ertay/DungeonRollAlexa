@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using DungeonRollAlexa.Helpers;
 
 namespace DungeonRollAlexa.Main.GameObjects
 {
@@ -26,7 +27,7 @@ namespace DungeonRollAlexa.Main.GameObjects
 
         public List<PartyDie> PartyDice { get; set; }
 
-        public List<PartyDie> Graveyard { get; set; }
+        public int Graveyard { get; set; }
 
         public int RevivalsRemaining { get; set; }
 
@@ -43,7 +44,7 @@ namespace DungeonRollAlexa.Main.GameObjects
             HasPartyFormationActions = false;
             Experience = 0;
             PartyDice = new List<PartyDie>();
-            Graveyard = new List<PartyDie>();
+            Graveyard =0;
             Inventory = new List<TreasureItem>();
             UsedItems = new List<TreasureItem>();
         }
@@ -51,7 +52,7 @@ namespace DungeonRollAlexa.Main.GameObjects
         public void ClearParty()
         {
             PartyDice.Clear();
-            Graveyard.Clear();
+            Graveyard = 0;
         }
 
         public string RollPartyDice(int partySize = 7)
@@ -73,10 +74,15 @@ namespace DungeonRollAlexa.Main.GameObjects
         {
             // TODO: Consider using this method everywhere Dice need to be moved from party to graveyard
 
-
-            var partyDie = PartyDice.First(d => d.Companion == companion);
+            // always try to remove companion created from treasure item first
+            
+            bool companionFromTreasureRemoved = PartyDice.RemoveFirst(d => d.IsFromTreasureItem && d.Companion == companion);
+            if (companionFromTreasureRemoved)
+                return;
+            // player didnt have a companion of this type that came from treasure, let's remove a normal die
+                var partyDie = PartyDice.First(d => d.Companion == companion);
             PartyDice.Remove(partyDie);
-            Graveyard.Add(partyDie);
+            Graveyard++;
         }
 
         public string RollSelectedDice()
@@ -121,11 +127,11 @@ namespace DungeonRollAlexa.Main.GameObjects
         {
             // player defeated dragon, let's remove the dice selection and move companions to graveyard
             string selectedCompanions= string.Join(", ", PartyDice.Where(d => d.IsSelected).Select(d => d.Name).ToList());
-            int removedCount = PartyDice.RemoveAll(d => d.IsSelected);
-            // TODO: Use RemoveAll when using dice. Convert Graveyard from List to integer and just track the number of dice in the graveyard, no need to have the full list
-            Graveyard.Add(new PartyDie());
-            Graveyard.Add(new PartyDie());
-            Graveyard.Add(new PartyDie());
+            UsePartyDie(PartyDice.First(d => d.IsSelected).Companion);
+            UsePartyDie(PartyDice.First(d => d.IsSelected).Companion);
+            UsePartyDie(PartyDice.First(d => d.IsSelected).Companion);
+
+            // TODO: Defeating dragon can be with two companions, fix this
 
             Inventory.Add(treasureItem);
             string message = $"You used your {selectedCompanions} to defeat the dragon. You acquired {treasureItem.TreasureType.GetDescription()}. ";
@@ -136,8 +142,8 @@ namespace DungeonRollAlexa.Main.GameObjects
         {
             // remove the companion from our party dice and add it to the graveyard
             var companionDie = PartyDice.First(d => d.Companion == companion);
-            PartyDice.Remove(companionDie);
-            Graveyard.Add(companionDie);
+            UsePartyDie(companion);
+
 
             // add the treasure items to our inventory
             Inventory.AddRange(treasureItems);
@@ -158,8 +164,7 @@ namespace DungeonRollAlexa.Main.GameObjects
             // acquire a single treasure item
             // first remove companion from party and add to graveyard
             var companionDie = PartyDice.First(d => d.Companion == companion);
-            PartyDice.Remove(companionDie);
-            Graveyard.Add(companionDie);
+            UsePartyDie(companion);
 
             // now add treasure
             Inventory.Add(item);
@@ -200,6 +205,10 @@ namespace DungeonRollAlexa.Main.GameObjects
                     message = "You used your thieves tools and added a thief to your party. ";
                     partyDie.Companion = CompanionType.Thief;
                     break;
+                case TreasureType.Scroll:
+                    message = "You used your scroll treasure item and added a scroll to your party. ";
+                    partyDie.Companion = CompanionType.Scroll;
+                    break;
             }
 // insert the new companion in the beginning of the party dice
             PartyDice.Insert(0, partyDie);
@@ -209,9 +218,9 @@ namespace DungeonRollAlexa.Main.GameObjects
         public List<DungeonDieType> UseCompanionToAttack(string companion)
         {
             var partyDie = PartyDice.First(d => d.Name == companion);
-                // add this companion to the graveyard and remove from party
-                Graveyard.Add(partyDie);
-            PartyDice.Remove(partyDie);
+            // add this companion to the graveyard and remove from party
+            UsePartyDie(partyDie.Companion);                
+
             return partyDie.TargetList;
         }
 
@@ -252,9 +261,7 @@ namespace DungeonRollAlexa.Main.GameObjects
         {
             // puts the companion in the graveyard and saves the number of potions quaffed to track the revivals
             RevivalsRemaining = numberOfPotions;
-            var partyDie = PartyDice.First(d => d.Companion == companion);
-            PartyDice.Remove(partyDie);
-            Graveyard.Add(partyDie);
+            UsePartyDie(companion);
 
             return $"You used a {companion} to quaff potions. The number of remaining companion revivals is {RevivalsRemaining}. Say revive followed by the companion name to begin reviving. ";
         }
@@ -262,8 +269,8 @@ namespace DungeonRollAlexa.Main.GameObjects
         public string ReviveCompanion(CompanionType companion)
         {
             // move a party die from graveyard to party dice then set the companion value
-            var partyDie = Graveyard[0];
-            Graveyard.RemoveAt(0);
+            Graveyard--;
+            var partyDie = new PartyDie();
             partyDie.Companion = companion;
             PartyDice.Add(partyDie);
             RevivalsRemaining--;
@@ -278,7 +285,7 @@ namespace DungeonRollAlexa.Main.GameObjects
         public string GetPartyStatus()
         {
             string message = $"Your party consists of: {GetPartyAsString()}. ";
-            message += Graveyard.Count > 0 ? $"The number of dice in the graveyard is {Graveyard.Count}. " : "";
+            message += Graveyard > 0 ? $"The number of dice in the graveyard is {Graveyard}. " : "";
 
             return message;
 

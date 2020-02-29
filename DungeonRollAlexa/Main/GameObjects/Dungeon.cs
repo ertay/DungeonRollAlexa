@@ -262,11 +262,14 @@ namespace DungeonRollAlexa.Main.GameObjects
             TreasureItems.Insert(randomIndex, treasure);
         }
 
-        public void DrinkPotion()
+        public void DrinkPotions(int numberOfPotions)
         {
-            // remove a potion from the dungeon dice
-            var potion = DungeonDice.First(d => d.DungeonDieType == DungeonDieType.Potion);
-            DungeonDice.Remove(potion);
+            // remove potions from the dungeon dice
+            for (int i = 0; i < numberOfPotions; i++)
+            {
+                DungeonDice.RemoveFirst(d => d.DungeonDieType == DungeonDieType.Potion);
+            }
+
         }
 
         public string ValidateNumberOfPotions(int requestedNumberOfPotions, int numberOfCompanionsInGraveyard)

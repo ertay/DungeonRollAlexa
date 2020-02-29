@@ -19,7 +19,7 @@ namespace DungeonRollAlexa.Main.GameObjects
         public bool IsFromTreasureItem { get; set; }
 
         /// <summary>
-        /// Contains objects that this die type can interact with. For example, a fighter would contain goblins and potions as one fighter can kill all goblins or drink all potions.
+        /// Contains    objects that this die type can interact with. For example, a fighter would contain goblins and potions as one fighter can kill all goblins or drink all potions.
         /// </summary>
         [JsonIgnore]
         public List<DungeonDieType> TargetList

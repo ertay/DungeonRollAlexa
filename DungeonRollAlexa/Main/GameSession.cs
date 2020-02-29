@@ -172,26 +172,31 @@ namespace DungeonRollAlexa.Main
 
         public SkillResponse DrinkPotions(IntentRequest request)
         {
-            // drink potion requested let's check if number is valid
-            int numberOfPotions =Utilities.ParseInt(request.Intent.Slots["NumberOfPotions"].Value);
-            // plus one to graveyard because the die used to quaff potion can also be revived with a new face
-            string message = _dungeon.ValidateNumberOfPotions(numberOfPotions, _hero.Graveyard.Count + 1);
-            if(!string.IsNullOrEmpty(message))
-            {
-                // validation failed, send the error message to user
-                return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
-            }
-            // we have a valid potion number let's check companion
+            string message = "";
+            // let's check companion first
             string companion = request.Intent.Slots["SelectedCompanion"].Value;
             if (!_hero.IsCompanionInParty(companion, true))
             {
                 message = $"{companion} is not in your party. You can quaff potions with a companion present in your party. ";
                 return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
             }
+            Enum.TryParse(companion.FirstCharToUpper(), out CompanionType companionType);
+            // we have valid companion, let's check number of potions
+            int numberOfPotions = Utilities.ParseInt(request.Intent.Slots["NumberOfPotions"].Value);
+            // plus one to graveyard because the die used to quaff potion can also be revived with a new face, unless the die is from treasure item
+            var partyDie = _hero.PartyDice.First(d =>d.Companion == companionType);
+            int addToGraveyard = partyDie.IsFromTreasureItem ? 0 : 1;
+            message = _dungeon.ValidateNumberOfPotions(numberOfPotions, _hero.Graveyard + addToGraveyard);
+            if (!string.IsNullOrEmpty(message))
+            {
+                // validation failed, send the error message to user
+                return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+            }
 
             // we have valid number and companion, save the revive counter and put the companion in the graveyard
-            Enum.TryParse(companion.FirstCharToUpper(), out CompanionType companionType);
+            
             message = _hero.DrinkPotions(numberOfPotions, companionType);
+            _dungeon.DrinkPotions(numberOfPotions);
             // set game state to reviving companions, we can't do anything else until this is finished
             GameState = GameState.RevivingCompanions;
             _lastResponseMessage = message;
@@ -213,8 +218,7 @@ namespace DungeonRollAlexa.Main
             if (!isCompanionValid)
                 return RepeatLastMessage($"{companion} is not a valid companion. You can revive fighter, cleric, mage, thief, champion, or scroll. ");
             // we have a valid companion let's revive it
-            // first remove potion from dungeon
-            _dungeon.DrinkPotion();
+
             message = _hero.ReviveCompanion(companionType);
             if (_hero.RevivalsRemaining < 1)
                 message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
@@ -460,10 +464,9 @@ if(!_dungeon.HasChest)
                 case TreasureType.Talisman:
                 case TreasureType.ScepterOfPower:
                 case TreasureType.ThievesTools:
-                    message += _hero.UseCompanionTreasure(item);
-                    break;
                 case TreasureType.Scroll:
-                    message += UseScrollTreasureItem(item);
+                    message += _hero.UseCompanionTreasure(item);
+                    _dungeon.ReturnUsedTreasure(item);
                     break;
                 case TreasureType.RingOfInvisibility:
                     message += UseRingOfInvisibilityItem(item);
@@ -505,7 +508,7 @@ if(!_dungeon.HasChest)
 
         private string UseElixirTreasureItem(TreasureItem item)
         {
-            if (_hero.Graveyard.Count < 1)
+            if (_hero.Graveyard < 1)
                 return "The graveyard is empty. Use an elixir when you want to revive a dead companion. ";
             _hero.Inventory.Remove(item);
             _dungeon.ReturnUsedTreasure(item);
@@ -525,17 +528,6 @@ if(!_dungeon.HasChest)
             message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
 
             return message;
-        }
-
-        private string UseScrollTreasureItem(TreasureItem item)
-        {
-            // player requested to use a scroll treasure item
-            if (GameState != GameState.MonsterPhase)
-                return "Scrolls can only be used during the monster phase. ";
-            _hero.Inventory.Remove(item);
-            _dungeon.ReturnUsedTreasure(item);
-            GameState = GameState.DiceSelectionForScroll;
-            return "You used a scroll treasure item. Say select followed by the dungeon or party dice names you want to select for rolling. ";
         }
 
         /// <summary>
@@ -560,7 +552,7 @@ if(!_dungeon.HasChest)
             SkillResponse response = null;
             string message = "";
             var dieList = new List<Die>();
-            dieList.AddRange(_hero.PartyDice);
+            dieList.AddRange(_hero.PartyDice.Where(d => !d.IsFromTreasureItem));
             // dungeon dice can't be selected during party formation phase
             if (GameState != GameState.PartyFormation)
                 dieList.AddRange(_dungeon.DungeonDice);

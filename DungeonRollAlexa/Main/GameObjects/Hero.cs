@@ -281,6 +281,10 @@ namespace DungeonRollAlexa.Main.GameObjects
             return $"You added a {companion} to your party. ";
         }
         
+        public virtual string TransformCompanion(CompanionType companion)
+        {
+            return "This hero does not have the transform ability. ";
+        }
 
         public string GetPartyStatus()
         {

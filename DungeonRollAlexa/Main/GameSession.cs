@@ -579,7 +579,7 @@ if(!_dungeon.HasChest)
                 if (GameState == GameState.PartyFormation)
                 message = "Invalid dice selection. You can only select dice from your party, and dice that are not selected already. ";
             else    
-                message = "Invalid selection. You can only select dice from your party or  the dungeon dice. Also, you cannot select dice that are already selected. ";
+                message = "Invalid selection. You can only select dice from your party or  the dungeon dice. Also, you cannot select party dice that were added from a treasure or dice that are already selected. ";
             _lastResponseMessage = message;
             SaveData();
             response = ResponseBuilder.Ask(message, RepromptBuilder.Create(message), Session);
@@ -627,6 +627,40 @@ if(!_dungeon.HasChest)
             SaveData();
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(message), Session);
         }
+
+        public SkillResponse TransformCompanion(IntentRequest request)
+        {
+            // used for the hero specialties that can transform companions
+            if(GameState != GameState.MonsterPhase && GameState != GameState.LootPhase && GameState != GameState.DragonPhase)
+            {
+                // cannot use transform
+                return ResponseBuilder.Ask("You can't transform your companions at this time. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+            }
+            string message = "";
+            // check if source companion is in party
+            string companion = request.Intent.Slots["SourceCompanion"].Value;
+            if (!_hero.IsCompanionInParty(companion, true))
+            {
+                message = $"{companion} is not in your party. You need to select an active party member to transform. ";
+                return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+            }
+            Enum.TryParse(companion.FirstCharToUpper(), out CompanionType companionType);
+            // let's check if the selected hero has a transform ability
+            switch (_hero.HeroType)
+            {
+                case HeroType.SpellswordBattlemage:
+                    message = _hero.TransformCompanion(companionType);
+                    break;
+                default:
+                    message = _hero.TransformCompanion(companionType);
+                    break;
+            }
+
+            SaveData();
+
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+        }
+
         /// <summary>
         /// This function will handle all the Yes intent requests depending on the state of the game.
         /// </summary>
@@ -706,7 +740,8 @@ if(!_dungeon.HasChest)
             attributes.Add("heroSelectorIndex", _heroSelectorIndex);
             if (_hero != null)
             {
-                attributes.Add("hero", JsonConvert.SerializeObject(_hero));
+                var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
+                attributes.Add("hero", JsonConvert.SerializeObject(_hero, settings));
             }
             else
             {
@@ -737,7 +772,9 @@ if(!_dungeon.HasChest)
             GameState = (GameState)Utilities.ParseInt(attributes["gameState"]);
             _lastResponseMessage = attributes["lastResponseMessage"].ToString();
             _heroSelectorIndex= Utilities.ParseInt(attributes["heroSelectorIndex"]);
-            _hero = JsonConvert.DeserializeObject<Hero>(attributes["hero"].ToString());
+
+            var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
+            _hero = JsonConvert.DeserializeObject<Hero>(attributes["hero"].ToString(), settings);
             _dungeon = JsonConvert.DeserializeObject<Dungeon>(attributes["dungeon"].ToString());
 
         }

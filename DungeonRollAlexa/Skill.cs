@@ -93,6 +93,9 @@ namespace DungeonRollAlexa
                 case BuiltInIntent.Fallback:
                     response = _gameSession.RepeatLastMessage("That is not a valid action. ");
                     break;
+                case BuiltInIntent.Repeat:
+                    response = _gameSession.RepeatLastMessage();
+                    break;
                 case BuiltInIntent.Yes:
                     response = _gameSession.ResolveYesIntent();
                     break;
@@ -163,6 +166,9 @@ namespace DungeonRollAlexa
                     break;
                 case "UseTreasureItemIntent":
                     response = _gameSession.UseTreasureItem(request);
+                    break;
+                case "TransformCompanionIntent":
+                    response = _gameSession.TransformCompanion(request);
                     break;
                 case "SeekGloryIntent":
                     response = _gameSession.SeekGlory();

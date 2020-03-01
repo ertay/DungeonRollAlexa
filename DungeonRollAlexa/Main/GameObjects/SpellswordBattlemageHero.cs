@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace DungeonRollAlexa.Main.GameObjects
@@ -10,7 +11,21 @@ namespace DungeonRollAlexa.Main.GameObjects
         {
             HeroType = HeroType.SpellswordBattlemage;
         }
-        
+
+        public override string TransformCompanion(CompanionType companion)
+        {
+            if (companion != CompanionType.Fighter && companion != CompanionType.Mage)
+                return $"You cannot transform a {companion}. Try saying transform fighter or transform mage instead. ";
+            if(companion == CompanionType.Fighter)
+            {
+                PartyDice.First(d => d.Companion == companion).Companion = CompanionType.Mage;
+                return "You transformed a fighter into a mage. ";
+            }
+
+            PartyDice.First(d => d.Companion == companion).Companion = CompanionType.Fighter;
+            return "You transformed a mage into a fighter. ";
+        }
+
         public override void ActivateSpecialty()
         {
             throw new NotImplementedException();

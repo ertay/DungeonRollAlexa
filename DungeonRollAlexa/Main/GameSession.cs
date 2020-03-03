@@ -74,14 +74,23 @@ namespace DungeonRollAlexa.Main
                     break;
             }
 
+            _dungeon = new Dungeon();
             // we created the hero move to the party creation phase
+            string message = InitializeDungeonDelve();
+            _lastResponseMessage = message;
+            SaveData();
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+        }
+
+        private string InitializeDungeonDelve()
+        {
             GameState = GameState.PartyFormation;
             string message = "";
             message = CreateParty();
-            _dungeon = new Dungeon();
+            _hero.IsExhausted = false;
             message += _dungeon.CreateNewDungeon();
             // check if hero can do any actions during party formation, otherwise we move to Monster phase
-            if(_hero.HasPartyFormationActions)
+            if (_hero.HasPartyFormationActions)
             {
                 message += $"{_hero.PartyFormationActionMessage}";
             }
@@ -93,7 +102,7 @@ namespace DungeonRollAlexa.Main
             else if (_dungeon.HasLoot)
             {
                 // no monsters we go to loot phase
-                message += "You are now in the loot phase. When you are ready, say next phase. ";
+                message += "You are in the loot phase. If you want to ignore the loot and continue, say next phase. ";
                 GameState = GameState.LootPhase;
             }
             else
@@ -102,9 +111,7 @@ namespace DungeonRollAlexa.Main
                 message += "You did not face any monsters or find loot in the first level. To seek glory and continue to level two, say seek glory. ";
                 GameState = GameState.RegroupPhase;
             }
-            _lastResponseMessage = message;
-            SaveData();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create("Reprompt message."), Session);
+            return message;
         }
 
         public SkillResponse NextHero()
@@ -146,6 +153,7 @@ namespace DungeonRollAlexa.Main
                     message = $"{companion} is not in your party. You need to attack with a companion present in your party. ";
                 return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
             }
+            Enum.TryParse(companion.FirstCharToUpper(), out CompanionType companionType);
             // we got a valid companion let's check the monster
             string monster = request.Intent.Slots["SelectedMonster"].Value;
             if (!_dungeon.IsMonsterInDungeon(monster))
@@ -155,6 +163,7 @@ namespace DungeonRollAlexa.Main
                 return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
             }
 
+            
             // we have a valid companion and monster, let's resolve the fight
             // we use the companion and get the target list of monsters it can kill (whole group)
             var targetList = _hero.UseCompanionToAttack(companion);
@@ -163,11 +172,42 @@ namespace DungeonRollAlexa.Main
 
 
             message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
+            // if hero is a commander and fighter was used, let's check if there's an additional target for the fighter
 
+            if (_hero.HeroType == HeroType.MercenaryCommander && _hero.Experience > 4 && companionType == CompanionType.Fighter && _dungeon.HasMonsters)
+            {
+                message += "Your fighter can defeat an additional monster. To use this ability, say defeat additional monster. Otherwise, say skip to ignore this ability. ";
+                GameState = GameState.KillAdditionalMonster;
+            }
             _lastResponseMessage = message;
             SaveData();
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
             
+        }
+
+        public SkillResponse DefeatAdditionalMonster(IntentRequest request)
+        {
+            if (GameState != GameState.KillAdditionalMonster)
+                return RepeatLastMessage("Invalid action. ");
+            string message = "";
+            string monster = request.Intent.Slots["SelectedMonster"].Value;
+            if (!_dungeon.IsMonsterInDungeon(monster))
+            {
+                // monster is not present in dungeon
+                message = $"{monster} is not a valid target to defeat. Try saying defeat additional monster again and provide a different monster name. If you want to skip the fighter's ability to kill an additional monster, say skip. ";
+                return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+            }
+
+            // valid additional monster selected let's kill it
+            var targetList = new List<DungeonDieType>();
+            targetList.Add(DungeonDieType.Goblin);
+            message += $"Your fighter additionally defeated ";
+            message += $"{_dungeon.DefeatMonsters(monster, targetList)}. ";
+
+            message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
+            _lastResponseMessage = message;
+            SaveData();
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
         }
 
         public SkillResponse DrinkPotions(IntentRequest request)
@@ -185,7 +225,7 @@ namespace DungeonRollAlexa.Main
             int numberOfPotions = Utilities.ParseInt(request.Intent.Slots["NumberOfPotions"].Value);
             // plus one to graveyard because the die used to quaff potion can also be revived with a new face, unless the die is from treasure item
             var partyDie = _hero.PartyDice.First(d =>d.Companion == companionType);
-            int addToGraveyard = partyDie.IsFromTreasureItem ? 0 : 1;
+            int addToGraveyard = partyDie.IsFromTreasureOrHeroAbility ? 0 : 1;
             message = _dungeon.ValidateNumberOfPotions(numberOfPotions, _hero.Graveyard + addToGraveyard);
             if (!string.IsNullOrEmpty(message))
             {
@@ -290,6 +330,14 @@ if(!_dungeon.HasChest)
                 _lastResponseMessage = message;
                 SaveData();
             }
+            else if (GameState == GameState.KillAdditionalMonster)
+            {
+                // player decided to skip the fighter ability to kill additional monster
+                
+                message = UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
+                _lastResponseMessage = message;
+                SaveData();
+            }
             else
                 message = "You cannot skip this phase. ";
             // TODO: Use a switch statement to give helpful messages to the player when they try to skip an unskippable phase
@@ -297,11 +345,51 @@ if(!_dungeon.HasChest)
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
         }
 
+        public SkillResponse RetireDelve()
+        {
+            if (GameState != GameState.RegroupPhase)
+                return RepeatLastMessage("You can retire when you complete a level. ");
+            string message = $"You retired on level {_dungeon.Level}. ";
+            // lets award experience points 
+            message += _hero.GainExperiencePoints(_dungeon.Level);
+
+            // TODO:  if this was the last dungeon delve, calculate final score and rank
+            // if (_dungeon.NumberOfDelves > 2)
+                
+            // start a new dungeon delve
+            message += InitializeDungeonDelve();
+            _lastResponseMessage = message;
+            SaveData();
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+        }
+
+        public SkillResponse FleeDungeon()
+        {
+            if (GameState == GameState.RegroupPhase)
+                return RetireDelve();
+
+            if (GameState == GameState.MainMenu || GameState == GameState.PartyFormation)
+                return RepeatLastMessage("That is not a valid action. ");
+
+            string message = $"You fled and concluded your delve on level {_dungeon.Level} without earning any experience points. ";
+            // TODO: player fled the dungeon, check if it was final delve and start scoring
+            // if (_dungeon.NumberOfDelves > 2)
+                
+            // create new delve
+            message += InitializeDungeonDelve();
+            _lastResponseMessage = message;
+            SaveData();
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+        }
+
         public SkillResponse SeekGlory()
         {
+            if (GameState != GameState.RegroupPhase)
+                return RepeatLastMessage("You can seek glory after finishing a level in the dungeon. ");
             // user wants to continue to next level
             string message = "You decided to seek glory and challenge the next level of the dungeon! ";
             message += _dungeon.CreateNextDungeonLevel();
+            
             message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
             _lastResponseMessage = message;
             SaveData();
@@ -311,7 +399,7 @@ if(!_dungeon.HasChest)
         private string UpdatePhaseIfNeeded(GameState newGameState)
         {
             // checks if we need to move to a new phase and returns the appropriate message
-            if (GameState == newGameState)
+            if (GameState == newGameState && newGameState != GameState.RegroupPhase)
                 return ""; 
             // return empty string if we're still in the same state
             switch (newGameState)
@@ -354,7 +442,7 @@ if(!_dungeon.HasChest)
             // we have a scroll, let'let's set the game state to dice selection phase
             // first move scroll to graveyard
             _hero.UsePartyDie(CompanionType.Scroll);
-            GameState = GameState.DiceSelectionForScroll;
+            GameState = GameState.StandardDiceSelection;
 
             message = "You used a scroll. Say select followed by the dungeon or party dice names you want to select for rolling. ";
             _lastResponseMessage = message;
@@ -537,10 +625,10 @@ if(!_dungeon.HasChest)
         /// <returns></returns>
         public SkillResponse SelectDice(IntentRequest request)
         {
-            if (GameState != GameState.DiceSelectionForScroll && GameState != GameState.PartyFormation && GameState != GameState.DragonPhase)
+            if (GameState != GameState.StandardDiceSelection && GameState != GameState.PartyFormation && GameState != GameState.DragonPhase && GameState != GameState.DiceSelectionForCalculatedStrike)
             {
                 // we are not in a dice selection phase
-                string errorMessage = "Invalid action. Dice selection can be done after using a scroll or when you are fighting the dragon.";
+                string errorMessage = "Invalid action. Dice selection can be done after using a scroll, when you are fighting the dragon, or using certain hero abilities. ";
                 return ResponseBuilder.Ask(errorMessage, RepromptBuilder.Create(_lastResponseMessage), Session);
             }
             // check if we are in dragon phase, we need a special selection for that
@@ -548,11 +636,14 @@ if(!_dungeon.HasChest)
             {
                 return DragonDiceSelection(request);
             }
+
+            if (GameState == GameState.DiceSelectionForCalculatedStrike)
+                return CalculatedStrikeSelectDice(request);
             
             SkillResponse response = null;
             string message = "";
             var dieList = new List<Die>();
-            dieList.AddRange(_hero.PartyDice.Where(d => !d.IsFromTreasureItem));
+            dieList.AddRange(_hero.PartyDice.Where(d => !d.IsFromTreasureOrHeroAbility));
             // dungeon dice can't be selected during party formation phase
             if (GameState != GameState.PartyFormation)
                 dieList.AddRange(_dungeon.DungeonDice);
@@ -588,7 +679,7 @@ if(!_dungeon.HasChest)
 
         public SkillResponse ClearDiceSelection()
         {
-            if (GameState != GameState.DiceSelectionForScroll && GameState != GameState.PartyFormation && GameState != GameState.DragonPhase)
+            if (GameState != GameState.StandardDiceSelection && GameState != GameState.PartyFormation && GameState != GameState.DragonPhase && GameState != GameState.DiceSelectionForCalculatedStrike)
             {
                 string errorMessage = "Invalid action. Dice selection can be done after using a scroll or when you are fighting the dragon.";
                 return ResponseBuilder.Ask(errorMessage, RepromptBuilder.Create(_lastResponseMessage), Session);
@@ -606,7 +697,7 @@ if(!_dungeon.HasChest)
 
         public SkillResponse RollSelectedDice()
         {
-            if (GameState != GameState.DiceSelectionForScroll && GameState != GameState.PartyFormation)
+            if (GameState != GameState.StandardDiceSelection && GameState != GameState.PartyFormation)
             {
                 string errorMessage = "Invalid action. You can roll dice after using a scroll and selecting the dice you want to roll.";
                 return ResponseBuilder.Ask(errorMessage, RepromptBuilder.Create(_lastResponseMessage), Session);
@@ -659,6 +750,136 @@ if(!_dungeon.HasChest)
             SaveData();
 
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+        }
+
+        public SkillResponse ActivateUltimate(HeroUltimates ultimate, IntentRequest request = null)
+        {
+            // check if this hero can use the hcosen ability
+            string errormessage = ValidateHeroAbility(ultimate);
+            if (!string.IsNullOrEmpty(errormessage))
+                return ResponseBuilder.Ask(errormessage, RepromptBuilder.Create(_lastResponseMessage), Session);
+                            string message = "";
+            switch (ultimate)
+            {
+                case HeroUltimates.ArcaneBlade:
+                    string companion = request.Intent.Slots["SelectedCompanion"].Value;
+                    bool parseComplete = Enum.TryParse(companion.FirstCharToUpper(), out CompanionType ct);
+                    CompanionType? companionType = null;
+                    if (parseComplete)
+                        companionType = ct;
+                    message = _hero.ActivateLevelOneUltimate(companionType);
+                    break;
+                case HeroUltimates.ArcaneFury:
+                    message += _hero.ActivateLevelTwoUltimate(null, _dungeon);
+                    message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
+                    break;
+                case HeroUltimates.CalculatedStrike:
+                    if(GameState != GameState.MonsterPhase)
+                    {
+                        message = "Calculated strike can only be used when you are fighting monsters. ";
+                        break;
+                    }
+                    message = _hero.ActivateLevelOneUltimate();
+                    if(string.IsNullOrEmpty(message))
+                    {
+                        message = "You are preparing to do a calculated strike. Select up to two monsters to defeat. For example, say select goblin and skeleton. ";
+                        GameState = GameState.DiceSelectionForCalculatedStrike;
+                    }
+                    
+                    break;
+                case HeroUltimates.BattlefieldPresence:
+                    if (GameState != GameState.MonsterPhase)
+                    {
+                        message = "Battlefield Presence can only be used when you are fighting monsters. ";
+                        break;
+                    }
+                    message += _hero.ActivateLevelTwoUltimate();
+                    if(string.IsNullOrEmpty(message))
+                    {
+                        message += "You used Battlefield Presence. Select any number of party and dungeon dice to reroll. ";
+                        GameState = GameState.StandardDiceSelection;
+                    }
+                    break;
+            }
+            
+            _lastResponseMessage = message;
+            SaveData();
+
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+
+        }
+
+            public SkillResponse CalculatedStrikeSelectDice(IntentRequest request)
+        {
+            var dice = _dungeon.DungeonDice;
+            int selectedCount = dice.Count(d => d.IsSelected && d.IsMonster);
+            if (selectedCount > 1)
+                return ResponseBuilder.Ask("You have already selected two monsters. Say calculated strike to defeat them, or clear dice selection to start over. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+            var validSlots = request.Intent.Slots.Where(s => s.Value.Value != null);
+            bool selectionApplied = false;
+            foreach (var item in validSlots)
+            {
+                if (selectedCount > 1)
+                    break;
+
+                string dieFace = item.Value.Value.ToString().ToLower();
+                var dieToSelect = dice.FirstOrDefault(d => d.Name == dieFace && !d.IsSelected && d.IsMonster);
+                if (dieToSelect != null)
+                {
+                    dieToSelect.IsSelected = true;
+                    selectedCount++;
+                    selectionApplied = true;
+                }
+            }
+
+            if (!selectionApplied)
+                return ResponseBuilder.Ask("Invalid monster selection. You can only select monsters that are present in the dungeon and are not already selected. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+            string message = "";
+            if (selectedCount == 1)
+                message = $"You selected {dice.First(d => d.IsSelected).Name}. You can select one more monster or say calculated strike to complete your action. ";
+            else
+                message = $"You selected {dice.First(d => d.IsSelected).Name} and {dice.Last(d => d.IsSelected).Name}. Say calculated strike to defeat them. ";
+            _lastResponseMessage = message;
+            SaveData();
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+
+        }
+
+        public SkillResponse PerformCalculatedStrike()
+        {
+            if (GameState != GameState.DiceSelectionForCalculatedStrike)
+                return RepeatLastMessage();
+
+            int monsterCount = _dungeon.DungeonDice.Count(d =>d.IsSelected);
+            if (monsterCount < 1)
+                return ResponseBuilder.Ask("You need to select up to two monsters to complete your calculated strike. Say select followed by a monster name. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+            // kill the selected monsters
+            var dice = _dungeon.DungeonDice;
+            string message = monsterCount > 1 ? $"You performed a calculated strike and defeated {dice.First(d => d.IsSelected).Name} and {dice.Last(d => d.IsSelected).Name}. " : $"You performed a calculated strike and defeated {dice.First(d => d.IsSelected).Name}. ";
+            dice.RemoveAll(d => d.IsSelected);
+            message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
+
+            _lastResponseMessage = message;
+            SaveData();
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+        }
+
+        private string ValidateHeroAbility(HeroUltimates ultimate)
+        {
+            // returns empty string  if hero can use the ultimate
+            switch (_hero.HeroType)
+            {
+                case HeroType.SpellswordBattlemage:
+                    if (ultimate == HeroUltimates.ArcaneBlade || ultimate == HeroUltimates.ArcaneFury)
+                        return string.Empty;
+                    break;
+                case HeroType.MercenaryCommander:
+                    if (ultimate == HeroUltimates.CalculatedStrike || ultimate == HeroUltimates.BattlefieldPresence)
+                        return string.Empty;
+                        break;
+            }
+
+            return "Your hero cannot use that ability. ";
         }
 
         /// <summary>

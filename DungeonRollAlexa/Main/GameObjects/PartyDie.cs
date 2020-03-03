@@ -16,7 +16,10 @@ namespace DungeonRollAlexa.Main.GameObjects
 
         public CompanionType Companion { get; set; }
 
-        public bool IsFromTreasureItem { get; set; }
+        /// <summary>
+        /// If true, this is not a standard party die, when removing such dice they don't go to graveyard.
+        /// </summary>
+        public bool IsFromTreasureOrHeroAbility { get; set; }
 
         /// <summary>
         /// Contains    objects that this die type can interact with. For example, a fighter would contain goblins and potions as one fighter can kill all goblins or drink all potions.

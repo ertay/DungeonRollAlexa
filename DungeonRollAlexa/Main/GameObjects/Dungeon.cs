@@ -71,6 +71,7 @@ namespace DungeonRollAlexa.Main.GameObjects
 
             if (TreasureItems == null)
                 TreasureItems = Utilities.GenerateTreasureItems();
+            NumberOfDelves++;
             Level = 1;
             DungeonDice = new List<DungeonDie>();
             DragonsLair = 0;
@@ -180,6 +181,12 @@ namespace DungeonRollAlexa.Main.GameObjects
         {
             // checks if the monster is present in the dungeon
             return DungeonDice.Any(d => d.Name == monsterName && d.IsMonster);
+        }
+
+        public bool IsMonsterInDungeon(DungeonDieType monster)
+        {
+            // checks if the monster is present in the dungeon
+            return DungeonDice.Any(d => d.DungeonDieType== monster && d.IsMonster);
         }
 
         public string DefeatMonsters(string monster, List<DungeonDieType> targetList)

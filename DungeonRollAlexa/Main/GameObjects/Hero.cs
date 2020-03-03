@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using DungeonRollAlexa.Helpers;
+using Alexa.NET.Request;
 
 namespace DungeonRollAlexa.Main.GameObjects
 {
@@ -13,6 +14,11 @@ namespace DungeonRollAlexa.Main.GameObjects
         SpellswordBattlemage,
         [Description("Mercenary - Specialty: When forming the party, you may reroll any number of party dice. The ultimate ability is Calculated Strike which lets you defeat any two monsters. Turns into a Commander when leveled up and gets a new specialty that lets your fighters defeat an additional monster of any type, while the new ultimate ability is Battlefield Presence and lets you reroll any number of party or dungeon dice. ")]
         MercenaryCommander
+    }
+
+    public enum HeroUltimates
+    {
+        ArcaneBlade, ArcaneFury, CalculatedStrike, BattlefieldPresence,
     }
 
     /// <summary>
@@ -25,6 +31,11 @@ namespace DungeonRollAlexa.Main.GameObjects
 
         public int Experience { get; set; }
 
+        public bool IsLeveledUp { get; set; }
+
+        [JsonIgnore]
+        public virtual string LevelUpMessage { get; }
+
         public List<PartyDie> PartyDice { get; set; }
 
         public int Graveyard { get; set; }
@@ -32,8 +43,7 @@ namespace DungeonRollAlexa.Main.GameObjects
         public int RevivalsRemaining { get; set; }
 
         public List<TreasureItem> Inventory { get; set; }
-
-        public List<TreasureItem> UsedItems { get; set; }
+        
         
         public bool HasPartyFormationActions { get; set; }
         [JsonIgnore]
@@ -46,7 +56,7 @@ namespace DungeonRollAlexa.Main.GameObjects
             PartyDice = new List<PartyDie>();
             Graveyard =0;
             Inventory = new List<TreasureItem>();
-            UsedItems = new List<TreasureItem>();
+            
         }
 
         public void ClearParty()
@@ -70,13 +80,28 @@ namespace DungeonRollAlexa.Main.GameObjects
             return message;
         }
 
+        public string GainExperiencePoints(int points)
+        {
+            Experience += points;
+            string message = $"You gained {points} experience and now have {Experience} experience. ";
+            if(!IsLeveledUp)
+            {
+                if (Experience > 4)
+                {
+                    LevelUp();
+                    message += LevelUpMessage;
+                }
+            }
+            return message;
+        }
+
         public void UsePartyDie(CompanionType companion)
         {
             // TODO: Consider using this method everywhere Dice need to be moved from party to graveyard
 
-            // always try to remove companion created from treasure item first
+            // always try to remove companion created from treasure item or hero ability first
             
-            bool companionFromTreasureRemoved = PartyDice.RemoveFirst(d => d.IsFromTreasureItem && d.Companion == companion);
+            bool companionFromTreasureRemoved = PartyDice.RemoveFirst(d => d.IsFromTreasureOrHeroAbility && d.Companion == companion);
             if (companionFromTreasureRemoved)
                 return;
             // player didnt have a companion of this type that came from treasure, let's remove a normal die
@@ -135,6 +160,7 @@ namespace DungeonRollAlexa.Main.GameObjects
 
             Inventory.Add(treasureItem);
             string message = $"You used your {selectedCompanions} to defeat the dragon. You acquired {treasureItem.TreasureType.GetDescription()}. ";
+            message += GainExperiencePoints(1);
             return message;
         }
 
@@ -185,7 +211,7 @@ namespace DungeonRollAlexa.Main.GameObjects
             Inventory.Remove(treasure);
             string message = "";
             PartyDie partyDie = new PartyDie();
-            partyDie.IsFromTreasureItem = true;
+            partyDie.IsFromTreasureOrHeroAbility = true;
 
             switch (treasure.TreasureType)
             {
@@ -305,8 +331,20 @@ namespace DungeonRollAlexa.Main.GameObjects
 
         public virtual void ActivateSpecialty() { }
 
-        public virtual void ActivateUltimate() { }
+        public virtual string ActivateLevelOneUltimate() { return string.Empty; }
 
-        public virtual void LevelUp() { }
+        public virtual string   ActivateLevelOneUltimate(CompanionType? companion = null, Dungeon dungeon = null) { return string.Empty; }
+        // TODO: refactor the above to use slots inside the method and not in gamesession
+        // public virtual string ActivateLevelOneUltimate(Dictionary<string, Slot> slots, Dungeon dungeon = null) { return string.Empty; }
+        public virtual string ActivateLevelTwoUltimate() { return string.Empty; }
+
+        public virtual string ActivateLevelTwoUltimate(CompanionType? companion = null, Dungeon dungeon = null) { return string.Empty; }
+
+        // public virtual string ActivateLevelTwoUltimate(Dictionary<string, Slot> slots, Dungeon dungeon = null) { return string.Empty; }
+
+        public virtual void LevelUp() 
+        {
+            IsLeveledUp = true;
+        }
     }
 }   

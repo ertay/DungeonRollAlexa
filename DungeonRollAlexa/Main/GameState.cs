@@ -10,6 +10,8 @@
         DragonPhase,
         RegroupPhase,
         RevivingCompanions,
-        DiceSelectionForScroll,
+        StandardDiceSelection,
+        DiceSelectionForCalculatedStrike,
+        KillAdditionalMonster,
     }
 }

@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using DungeonRollAlexa.Extensions;
 using DungeonRollAlexa.Main;
+using DungeonRollAlexa.Main.GameObjects;
 
 namespace DungeonRollAlexa
 {
@@ -152,6 +153,9 @@ namespace DungeonRollAlexa
                 case "AttackMonsterIntent":
                     response = _gameSession.AttackMonster(request);
                     break;
+                case "DefeatAdditionalMonsterIntent":
+                    response = _gameSession.DefeatAdditionalMonster(request);
+                    break;
                 case "OpenChestIntent":
                     response = _gameSession.OpenChestAction(request);
                     break;
@@ -177,7 +181,10 @@ namespace DungeonRollAlexa
                     response = _gameSession.GoToNextPhase();
                     break;
                 case "FleeIntent":
-                    // TODO: Add flee intent
+                    response = _gameSession.FleeDungeon();
+                    break;
+                case "RetireIntent":
+                    response = _gameSession.RetireDelve();
                     break;
                 case "PartyStatusIntent":
                     response = _gameSession.GetPartyStatus();
@@ -187,6 +194,22 @@ namespace DungeonRollAlexa
                     break;
                 case "InventoryIntent":
                     response = _gameSession.GetInventoryStatus();
+                    break;
+                // ultimate ability intents
+                case "ArcaneBladeIntent":
+                    response = _gameSession.ActivateUltimate(HeroUltimates.ArcaneBlade, request);
+                    break;
+                case "ArcaneFuryIntent":
+                    response = _gameSession.ActivateUltimate(HeroUltimates.ArcaneFury, request);
+                    break;
+                case "CalculatedStrikeIntent":
+                    if (_gameSession.GameState != GameState.DiceSelectionForCalculatedStrike)
+                        response = _gameSession.ActivateUltimate(HeroUltimates.CalculatedStrike, request);
+                    else
+                        response = _gameSession.PerformCalculatedStrike();
+                    break;
+                case "BattlefieldPresenceIntent":
+                    response = _gameSession.ActivateUltimate(HeroUltimates.BattlefieldPresence, request);
                     break;
             }
 

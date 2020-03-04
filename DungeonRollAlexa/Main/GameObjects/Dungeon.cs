@@ -67,7 +67,7 @@ namespace DungeonRollAlexa.Main.GameObjects
         
         public string CreateNewDungeon()
         {
-            string message;
+            string message = "";
 
             if (TreasureItems == null)
                 TreasureItems = Utilities.GenerateTreasureItems();
@@ -75,19 +75,32 @@ namespace DungeonRollAlexa.Main.GameObjects
             Level = 1;
             DungeonDice = new List<DungeonDie>();
             DragonsLair = 0;
+
+            switch (NumberOfDelves)
+            {
+                case 1:
+                    message += "Get ready for your first dungeon delve! ";
+                    break;
+                case 2:
+                    message += "Get ready for your second dungeon delve! ";
+                    break;
+                case 3:
+                    message += "Get ready for your final dungeon delve! ";
+                    break;
+            }
             
             DungeonDie die = new DungeonDie();
             if (die.DungeonDieType == DungeonDieType.Dragon)
             {
                 DragonsLair++;
-                message = "The first level of the dungeon is empty, but there is one dragon die in the Dragon's Lair. ";
+                message += "The first level of the dungeon is empty, but there is one dragon die in the Dragon's Lair. ";
             }
             else
             {
                 DungeonDice.Add(die);
-                message = $"The first level in the dungeon has one {DungeonDice[0].DungeonDieType}. ";
+                message += $"The first level in the dungeon has one {DungeonDice[0].DungeonDieType}. ";
             }
-            message += $"";
+            
             return message;
 
         }

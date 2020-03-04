@@ -353,14 +353,48 @@ if(!_dungeon.HasChest)
             // lets award experience points 
             message += _hero.GainExperiencePoints(_dungeon.Level);
 
-            // TODO:  if this was the last dungeon delve, calculate final score and rank
-            // if (_dungeon.NumberOfDelves > 2)
+            
+            bool gameOver = false;
+            if (_dungeon.NumberOfDelves > 2)
+            {
+                gameOver = true;
+                message += CalculateFinalScore();
+                GameState = GameState.MainMenu;
+            }
                 
-            // start a new dungeon delve
-            message += InitializeDungeonDelve();
+            // start a new dungeon delve if game is not over
+            if(!gameOver)
+                message += InitializeDungeonDelve();
             _lastResponseMessage = message;
             SaveData();
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+        }
+
+        private string CalculateFinalScore()
+        {
+            // third delve complete let's calculate score and show rank
+            int score = _hero.Experience;
+            _hero.Inventory.ForEach(i => score += i.ExperiencePoints); ;
+            // each dragon scale pair worth an additional two points
+            int dragonScaleParis = _hero.Inventory.Count(i => i.TreasureType == TreasureType.DragonScales) / 2;
+            score += dragonScaleParis * 2;
+
+            string rank, message;
+
+            if (score < 16)
+                rank = "Dragon Fodder";
+            else if (score < 24)
+                rank = "Village Hero";
+            else if (score < 30)
+                rank = "Seasoned Explorer";
+            else if (score < 35)
+                rank = "Champion";
+            else
+                rank = "Hero of Ages";
+
+            message = $"Your final score is {score}. Congratulations, you are now known as {rank}! To start a new game, say new game. ";
+            
+            return message;
         }
 
         public SkillResponse FleeDungeon()
@@ -372,11 +406,18 @@ if(!_dungeon.HasChest)
                 return RepeatLastMessage("That is not a valid action. ");
 
             string message = $"You fled and concluded your delve on level {_dungeon.Level} without earning any experience points. ";
-            // TODO: player fled the dungeon, check if it was final delve and start scoring
-            // if (_dungeon.NumberOfDelves > 2)
-                
+
+            bool gameOver = false;
+            if (_dungeon.NumberOfDelves > 2)
+            {
+                gameOver = true;
+                message += CalculateFinalScore();
+                GameState = GameState.MainMenu;
+            }
+
             // create new delve
-            message += InitializeDungeonDelve();
+            if(!gameOver)
+                message += InitializeDungeonDelve();
             _lastResponseMessage = message;
             SaveData();
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
@@ -417,8 +458,26 @@ if(!_dungeon.HasChest)
                     return "You are now facing a dragon. You need to select three companions of different types to defeat the dragon and continue. ";
                     break;
                 case GameState.RegroupPhase:
-                    GameState = newGameState;
-                    return $"You completed level {_dungeon.Level}. Say seek glory to continue to the next level. Say retire to end the dungeon delve and collect experience points. ";
+                    if (_dungeon.Level == 10)
+                    {
+                        string message = "You cleared the dungeon! ";
+                        message += _hero.GainExperiencePoints(_dungeon.Level);
+                        if (_dungeon.NumberOfDelves > 2)
+                        {
+                            message += CalculateFinalScore();
+                            GameState = GameState.MainMenu;
+                        }
+                        else
+                        {
+                            message += InitializeDungeonDelve();
+                        }
+                        return message;
+                    }
+                    else
+                    {
+                        GameState = newGameState;
+                        return $"You completed level {_dungeon.Level}. Say seek glory to continue to the next level. Say retire to end the dungeon delve and collect experience points. ";
+                    }
                     break;
             }
 
@@ -569,14 +628,37 @@ if(!_dungeon.HasChest)
                     message += UseDragonBaitTreasureItem(item);
                     break;
                 case TreasureType.TownPortal:
-                    message += "Town portal is not implemented yet. ";
-                    // TODO: Implement town portal
+                    message += UseTownPortalTreasureItem(item);
                     break;
             }
             _lastResponseMessage = message;
             SaveData();
 
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+        }
+
+        private string UseTownPortalTreasureItem(TreasureItem item)
+        {
+            if (GameState != GameState.MonsterPhase && GameState != GameState.LootPhase && GameState != GameState.DragonPhase)
+                return "You cannot use a town portal at the moment. You can use it in the monster phase, loot phase, or dragon phase. ";
+
+            _hero.Inventory.Remove(item);
+            _dungeon.ReturnUsedTreasure(item);
+            // town portal used award experience points
+            string message = _hero.GainExperiencePoints(_dungeon.Level);
+
+            bool gameOver = false;
+            if(_dungeon.NumberOfDelves > 2)
+            {
+                gameOver = true;
+                message += CalculateFinalScore();
+                GameState = GameState.MainMenu;
+            }
+
+            if (!gameOver)
+                message += InitializeDungeonDelve();
+
+            return message;
         }
 
         private string UseDragonBaitTreasureItem(TreasureItem item)
@@ -770,6 +852,11 @@ if(!_dungeon.HasChest)
                     message = _hero.ActivateLevelOneUltimate(companionType);
                     break;
                 case HeroUltimates.ArcaneFury:
+                    if(GameState != GameState.MonsterPhase && GameState != GameState.LootPhase && GameState != GameState.DragonPhase)
+                    {
+                        message += "Arcane Fury can only be used during the monster phase, loot phase, or dragon phase. ";
+                        break;
+                    }
                     message += _hero.ActivateLevelTwoUltimate(null, _dungeon);
                     message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
                     break;

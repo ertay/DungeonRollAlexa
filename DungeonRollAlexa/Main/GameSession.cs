@@ -47,6 +47,15 @@ namespace DungeonRollAlexa.Main
             }
         }
 
+        public SkillResponse Welcome()
+        {
+            string message = "Welcome to Dungeon Roll. To begin, say new game. To learn the rules, say rules. Say help at any point during the game if you need help. ";
+            _lastResponseMessage = message;
+            SaveData();
+
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+        }
+
         public SkillResponse SetupNewGame()
         {            
             // user requested to start a new game, prepare hero selection
@@ -1013,18 +1022,24 @@ if(!_dungeon.HasChest)
 
         public SkillResponse GetDungeonStatus()
         {
+            if (GameState == GameState.MainMenu)
+                return RepeatLastMessage();
             string message = _dungeon.GetDungeonStatus();
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
         }
 
         public SkillResponse GetPartyStatus()
         {
+            if (GameState == GameState.MainMenu)
+                return RepeatLastMessage();
             string message = _hero.GetPartyStatus();
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
         }
 
         public SkillResponse GetInventoryStatus()
         {
+            if (GameState == GameState.MainMenu)
+                return RepeatLastMessage();
             string message = _hero.GetInventoryStatus();
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
         }
@@ -1085,6 +1100,124 @@ if(!_dungeon.HasChest)
             _hero = JsonConvert.DeserializeObject<Hero>(attributes["hero"].ToString(), settings);
             _dungeon = JsonConvert.DeserializeObject<Dungeon>(attributes["dungeon"].ToString());
 
+        }
+
+        public SkillResponse GetSpecialtyInformation()
+        {
+            string message = "";
+            if (_hero == null)
+                return ResponseBuilder.Ask("You haven't selected a hero yet. Say new game to start a new game. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+
+
+            message = _hero.SpecialtyInformation;
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+        }
+
+        public SkillResponse GetUltimateInformation()
+        {
+            string message = "";
+            if (_hero == null)
+                return ResponseBuilder.Ask("You haven't selected a hero yet. Say new game to start a new game. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+
+
+            message = _hero.UltimateInformation;
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+        }
+
+        public SkillResponse GetItemInformation(IntentRequest request)
+        {
+            string message = "";
+            string selectedItem = request.Intent.Slots["SelectedItem"].Value;
+
+            switch (selectedItem)
+            {
+                case "vorpal sword":
+                    message = "When you use a vorpal sword, it adds a fighter to your party. It gives you one experience point at the end of the game if you still have it in your inventory. ";
+                    break;
+                case "talisman":
+                    message = "When you use a talisman, it adds a cleric to your party. It gives you one experience point at the end of the game if you still have it in your inventory. ";
+                    break;
+                case "scepter of power":
+                    message = "When you use a scepter of power, it adds a mage to your party. It gives you one experience point at the end of the game if you still have it in your inventory. ";
+                    break;
+                case "thieves tools":
+                    message = "When you use thieves tools, it adds a thief to your party. It gives you one experience point at the end of the game if you still have it in your inventory. ";
+                    break;
+                case "scroll":
+                    message = "When you use a scroll treasure item, it adds a scroll to your party. It gives you one experience point at the end of the game if you still have it in your inventory. ";
+                    break;
+                case "ring of invisibility":
+                    message = "When you use a ring of invisibility, all dragon dice from the Dragon's Lair are discarded and you can skip a dragon fight. It gives you one experience point at the end of the game if you still have it in your inventory. ";
+                    break;
+                case "dragon scales":
+                    message = "Dragon scales gives you one experience point at the end of the game. Additionally, for each pair you get two points. So, if you have three dragon scales, you get five points at the end of the game. ";
+                    break;
+                case "elixir":
+                    message = "When you use an elixir, you can revive a party member from the graveyard. It gives you one experience point at the end of the game if you still have it in your inventory. ";
+                    break;
+                case "dragon bait":
+                    message = "When you use dragon bait, all monsters are transformed to dragon dice and moved to the Dragon's Lair. It gives you one experience point at the end of the game if you still have it in your inventory. ";
+                    break;
+                case "town portal":
+                    message = "When you use a town portal, you can retire and end a delve at any phase of the dungeon. It gives you two experience point at the end of the game if you still have it in your inventory. ";
+                    break;
+                default:
+                    message = $"{selectedItem} is not a valid item. Valid items are: vorpal sword, talisman, scepter of power, thieves tools, scroll, ring of invisibility, dragon scales, elixir, dragon bait, and town portal. ";
+                    break;
+            }
+
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+        }
+
+        public SkillResponse GetHelp()
+        {
+            string message = "";
+
+            switch (GameState)
+            {
+                case GameState.MainMenu:
+                    message = "You are in the main menu. To start a new game, say new game. To listen to the game rules, say rules. Say help at any point in the game to learn about valid commands. ";
+                    break;
+                case GameState.HeroSelection:
+                    message = "You are in the hero selection phase. If you want to pick the hero that is presented, say yes. If you want to go to the next hero, say no. ";
+                    break;
+                case GameState.PartyFormation:
+                    message = "You are in the party formation phase and about to start a new dungeon delve. Your hero can select dice in your party to reroll before you start. Say select followed by the party die name to select dice. Say party status to get information about your party. ";
+                    break;
+                case GameState.MonsterPhase:
+                    message = "You are in the monster phase and you need to attack monsters to defeat them. Valid commands in this phase are the following: 1. Attack - for example say fighter attack goblin. A single fighter can defeat all goblins, a single mage can defeat all oozes, a single cleric defeats all skeletons, and a champion defeats all monsters of the selected type. 2. Use scroll - scrolls let you reroll any party or dungeon dice. 3. Use item - use a treasure item from your inventory. 4. Flee - if you cannot pass this phase you need to flee and end the delve. 5. Specialty - get information about how you can use your hero specialty. 6. Ultimate ability - get information about how you can use your ultimate ability. 7. Party status - get information about your party. 8. Dungeon status - get information about the current state of the dungeon. 9. Inventory - get information about your inventory. 10. Item information - get information about a specific treasure item. ";
+                    break;
+                case GameState.LootPhase:
+                    message = "In the loot phase you can open chests to receive treasure items, or quaff potions to revive party members from the graveyard. Valid commands in this phase are the following: 1. open chest - a thief or champion can open all chests at once, while other companions can open a single chest when used. 2. Quaff potion - any party member can be used to quaff as many potions that are available. Scrolls can also quaff potions. 3. Use item - use a treasure item from your inventory 4. Next Phase - ignore  remaining loot and continue to  next phase. 5. Specialty - get information about how you can use your hero specialty. 6. Ultimate ability - get information about how you can use your ultimate ability. 7. Party status - get information about your party. 8. Dungeon status - get information about the current state of the dungeon. 9. Inventory - get information about your inventory. 10. Item information - get information about a specific treasure item. ";
+                    break;
+                case GameState.DragonPhase:
+                    message = "In the dragon phase you need to select different companion types to defeat the dragon. Valid commands in this phase are the following: 1. Select - For example, say select fighter, mage, cleric. 2. Clear dice selection - clear dice selection to start over 3. Defeat dragon - defeat dragon using the selected dice. 4. Use item - use a treasure item from your inventory 5. Flee - if you cannot pass this phase you need to flee and end the delve. 6. Specialty - get information about how you can use your hero specialty. 7. Ultimate ability - get information about how you can use your ultimate ability. 8. Party status - get information about your party. 9. Dungeon status - get information about the current state of the dungeon. 10. Inventory - get information about your inventory. 11. Item information - get information about a specific treasure item. ";
+                    break;
+                case GameState.RegroupPhase:
+                    message = "You completed a level in the dungeon. Valid commands in this phase are the following: 1. Seek Glory - start the next level in the dungeon. 2. Retire - End your delve and collect experience points equal to the level number. 3. Specialty - get information about how you can use your hero specialty. 4. Ultimate ability - get information about how you can use your ultimate ability. 5. Party status - get information about your party. 6. Dungeon status - get information about the current state of the dungeon. 7. Inventory - get information about your inventory. 8. Item information - get information about a specific treasure item. ";
+                    break;
+                case GameState.RevivingCompanions:
+                    message = "You need to revive companions from the graveyard. For example, say revive champion. ";
+                    break;
+                case GameState.StandardDiceSelection:
+                    message += "You need to select party or dungeon dice you would like to roll. For example, say select champion, skeleton, goblin. When you are ready, say roll dice, or clear dice selection to start over. Say dungeon status or party status to get information about which dice are available for selection. ";
+                    break;
+                case GameState.DiceSelectionForCalculatedStrike:
+                    message = "You used a hero ability and are required to select dice. Use the select keyword to select dice. Say dungeon status to get information about which dice are available. ";
+                    break;
+                case GameState.KillAdditionalMonster:
+                    message = "You can say defeat additional monster to use the hero specialty, or you can say skip, to ignore  this ability. ";
+                    break;
+            }
+
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+        }
+
+        public SkillResponse ReadRules()
+        {
+            string rules = "The Dungeon lies before you; you’ve assembled your party of hearty adventurers and have a few tricks up your sleeve. How far will you go to seek glory and fame? Will you risk losing everything? In Dungeon Roll your goal is to collect the most experience points by defeating monsters, battling the dragon, and amassing treasure. You select a Hero avatar, such as a Mercenary, Half-Goblin, or Enchantress, which provides you with unique powers. You assemble your party by rolling seven Party Dice, while Alexa, that would be me,  serves as the Dungeon Lord and rolls a number of Dungeon Dice based on how far you have progressed through the dungeon. You use Champion, Fighter, Cleric, Mage, Thief, and Scroll faces on the Party Dice to defeat monsters such as oozes and skeletons, to claim treasure inside chests, and to revive downed companions with potions. All this fighting in the dungeon is certain to attract the attention of the boss: The Dragon! When three or more Dragon faces appear on the Dungeon Dice, the Adventurer must battle the Dragon. Defeating the dragon is a team effort, requiring three different companion types. After three rounds, you add up your experience points and retire to the inn to celebrate your exploits and to plan your next foray into the next deadly dungeon! You can say help at any point during the game to get information about valid commands. Say new game to start a new game. ";
+
+            return ResponseBuilder.Ask(rules, RepromptBuilder.Create(_lastResponseMessage), Session);
         }
     }
 }

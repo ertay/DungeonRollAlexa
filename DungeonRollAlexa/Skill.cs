@@ -51,9 +51,7 @@ namespace DungeonRollAlexa
                 {
                     log.LogInformation("Session started");
 
-                    var welcomeMessage = await locale.Get(LanguageKeys.Welcome, null);
-                    var welcomeRepromptMessage = await locale.Get(LanguageKeys.WelcomeReprompt, null);
-                    response = ResponseBuilder.Ask(welcomeMessage, RepromptBuilder.Create(welcomeRepromptMessage), _gameSession.Session);
+                    response = _gameSession.Welcome();
                 }
                 else if (request is IntentRequest intentRequest)
                 {
@@ -105,21 +103,20 @@ namespace DungeonRollAlexa
                     break;
                 case BuiltInIntent.Cancel:
                     {
-                        var message = await locale.Get(LanguageKeys.Cancel, null);
+                        string message = "Thank you for playing Dungeon Roll!";
                         response = ResponseBuilder.Tell(message);
                         break;
                     }
 
                 case BuiltInIntent.Help:
                     {
-                        var message = await locale.Get(LanguageKeys.Help, null);
-                        response = ResponseBuilder.Ask(message, RepromptBuilder.Create(message));
+                        response = _gameSession.GetHelp();
                         break;
                     }
 
                 case BuiltInIntent.Stop:
                     {
-                        var message = await locale.Get(LanguageKeys.Stop, null);
+                        string message = "Thank you for playing Dungeon Roll!";
                         response = ResponseBuilder.Tell(message);
                         break;
                     }
@@ -137,6 +134,18 @@ namespace DungeonRollAlexa
                 case "NewGameIntent":
                     //start a new game
                     response = _gameSession.SetupNewGame();
+                    break;
+                case "RulesIntent":
+                    response = _gameSession.ReadRules();
+                    break;
+                case "SpecialtyInformationIntent":
+                    response = _gameSession.GetSpecialtyInformation();
+                    break;
+                case "UltimateInformationIntent":
+                    response = _gameSession.GetUltimateInformation();
+                    break;
+                case "TreasureItemInformationIntent":
+                    response = _gameSession.GetItemInformation(request);
                     break;
                 case "ScrollDieIntent":
                     response = _gameSession.UseScroll();

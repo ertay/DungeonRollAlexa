@@ -7,6 +7,10 @@ namespace DungeonRollAlexa.Main.GameObjects
 
         public override string PartyFormationActionMessage => "You can reroll any of your party dice before continuing. For example, say select fighter, thief, to select the dice. Say next phase to start the delve with your current party. ";
 
+        public override string SpecialtyInformation => IsLeveledUp? "Your fighters defeat an additional monster of any type. " : "When forming the party, you may reroll any number of party dice. ";
+
+        public override string UltimateInformation => IsLeveledUp ? "Your ultimate ability is Battlefield Presence and lets you reroll any number of party or dungeon dice. Say Battlefield Presence to use it. " : "Your ultimate ability is Calculated Strike which lets you defeat any two monsters. Say Calculated Strike to use it. ";
+
         public override string LevelUpMessage { get
             {
                 

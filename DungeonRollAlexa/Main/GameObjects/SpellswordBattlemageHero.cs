@@ -7,6 +7,11 @@ namespace DungeonRollAlexa.Main.GameObjects
 {
     public class SpellswordBattlemageHero : Hero
     {
+        
+        public override string SpecialtyInformation => "Your fighters may be used as mages, and mages may be used as fighters. To use this specialty, say transform fighter, or say transform mage. ";
+
+        public override string UltimateInformation => IsLeveledUp ? "Your ultimate ability is Arcane Fury which lets you discard all monsters, chests, potions, and dice in the dragon's lair. Say Arcane Fury to use it. " : "Your ultimate ability is Arcane Blade and when activated lets you use the hero as a fighter or mage. Say Arcane Blade to use it. ";
+        
         public override string LevelUpMessage
         {
             get

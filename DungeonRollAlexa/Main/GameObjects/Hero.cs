@@ -35,6 +35,10 @@ namespace DungeonRollAlexa.Main.GameObjects
 
         [JsonIgnore]
         public virtual string LevelUpMessage { get; }
+        [JsonIgnore]
+        public virtual string UltimateInformation { get; }
+        [JsonIgnore]
+        public virtual string SpecialtyInformation{ get; }
 
         public List<PartyDie> PartyDice { get; set; }
 

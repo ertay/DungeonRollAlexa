@@ -51,10 +51,10 @@ namespace DungeonRollAlexa.Helpers
                 {new TreasureItem(){ TreasureType = TreasureType.DragonBait, ExperiencePoints = 1 } },
                 {new TreasureItem(){ TreasureType = TreasureType.DragonBait, ExperiencePoints = 1 } },
                 {new TreasureItem(){ TreasureType = TreasureType.DragonBait, ExperiencePoints = 1 } },
-                {new TreasureItem(){ TreasureType = TreasureType.TownPortal, ExperiencePoints = 1 } },
-                {new TreasureItem(){ TreasureType = TreasureType.TownPortal, ExperiencePoints = 1 } },
-                {new TreasureItem(){ TreasureType = TreasureType.TownPortal, ExperiencePoints = 1 } },
-                {new TreasureItem(){ TreasureType = TreasureType.TownPortal, ExperiencePoints = 1 } },
+                {new TreasureItem(){ TreasureType = TreasureType.TownPortal, ExperiencePoints = 2 } },
+                {new TreasureItem(){ TreasureType = TreasureType.TownPortal, ExperiencePoints = 2 } },
+                {new TreasureItem(){ TreasureType = TreasureType.TownPortal, ExperiencePoints = 2 } },
+                {new TreasureItem(){ TreasureType = TreasureType.TownPortal, ExperiencePoints = 2 } },
             };
             list.Shuffle();
             return list;

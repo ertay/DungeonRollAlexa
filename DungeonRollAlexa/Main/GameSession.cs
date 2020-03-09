@@ -221,6 +221,9 @@ namespace DungeonRollAlexa.Main
 
         public SkillResponse DrinkPotions(IntentRequest request)
         {
+            if (GameState != GameState.LootPhase)
+                return ResponseBuilder.Ask("Potions can only be quaffed during the loot phase. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+
             string message = "";
             // let's check companion first
             string companion = request.Intent.Slots["SelectedCompanion"].Value;
@@ -279,6 +282,8 @@ namespace DungeonRollAlexa.Main
 
         public SkillResponse OpenChestAction(IntentRequest request)
         {
+            if (GameState != GameState.LootPhase)
+                return ResponseBuilder.Ask("Chests can only be opened during the loot phase. ", RepromptBuilder.Create(_lastResponseMessage), Session);
             // user wants to open chest
             string message = "";
             string companion = request.Intent.Slots["SelectedCompanion"].Value;

@@ -26,6 +26,8 @@ namespace DungeonRollAlexa.Main.GameObjects
         /// If true, it marks that this companion was transformed from a monster. When used it doesnt go to graveyard. It gets removed during regroup phase.
         /// </summary>
         public bool IsFromMonster { get; set; }
+        [JsonIgnore]
+        public bool IsStandardPartyDie => !IsFromMonster && !IsFromTreasureOrHeroAbility;
 
         /// <summary>
         /// Contains    objects that this die type can interact with. For example, a fighter would contain goblins and potions as one fighter can kill all goblins or drink all potions.

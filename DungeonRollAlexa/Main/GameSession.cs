@@ -240,7 +240,7 @@ namespace DungeonRollAlexa.Main
             int numberOfPotions = Utilities.ParseInt(request.Intent.Slots["NumberOfPotions"].Value);
             // plus one to graveyard because the die used to quaff potion can also be revived with a new face, unless the die is from treasure item
             var partyDie = _hero.PartyDice.First(d =>d.Companion == companionType);
-            int addToGraveyard = partyDie.IsFromTreasureOrHeroAbility ? 0 : 1;
+            int addToGraveyard = partyDie.IsStandardPartyDie ? 1 : 0;
             message = _dungeon.ValidateNumberOfPotions(numberOfPotions, _hero.Graveyard + addToGraveyard);
             if (!string.IsNullOrEmpty(message))
             {
@@ -745,7 +745,7 @@ if(!_dungeon.HasChest)
             SkillResponse response = null;
             string message = "";
             var dieList = new List<Die>();
-            dieList.AddRange(_hero.PartyDice.Where(d => !d.IsFromTreasureOrHeroAbility));
+            dieList.AddRange(_hero.PartyDice.Where(d => d.IsStandardPartyDie));
             // dungeon dice can't be selected during party formation phase
             if (GameState != GameState.PartyFormation)
                 dieList.AddRange(_dungeon.DungeonDice);

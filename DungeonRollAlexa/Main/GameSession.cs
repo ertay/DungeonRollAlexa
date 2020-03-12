@@ -81,6 +81,9 @@ namespace DungeonRollAlexa.Main
                 case HeroType.MercenaryCommander:
                     _hero = new MercenaryCommanderHero();
                     break;
+                case HeroType.OccultistNecromancer:
+                    _hero = new OccultistNecromancerHero();
+                    break;
             }
 
             _dungeon = new Dungeon();
@@ -490,7 +493,10 @@ if(!_dungeon.HasChest)
                     else
                     {
                         GameState = newGameState;
-                        return $"You completed level {_dungeon.Level}. Say seek glory to continue to the next level. Say retire to end the dungeon delve and collect experience points. ";
+                        // check if we need to discard transformed monsters
+                        string removedTransformedMonsters = _hero.RemoveMonsterCompanions();
+                        
+                        return $"You completed level {_dungeon.Level}. {removedTransformedMonsters}Say seek glory to continue to the next level. Say retire to end the dungeon delve and collect experience points. ";
                     }
                     break;
             }
@@ -850,7 +856,7 @@ if(!_dungeon.HasChest)
 
         public SkillResponse ActivateUltimate(HeroUltimates ultimate, IntentRequest request = null)
         {
-            // check if this hero can use the hcosen ability
+            // check if this hero can use the chosen ability
             string errormessage = ValidateHeroAbility(ultimate);
             if (!string.IsNullOrEmpty(errormessage))
                 return ResponseBuilder.Ask(errormessage, RepromptBuilder.Create(_lastResponseMessage), Session);
@@ -900,6 +906,25 @@ if(!_dungeon.HasChest)
                         message += "You used Battlefield Presence. Select any number of party and dungeon dice to reroll. ";
                         GameState = GameState.StandardDiceSelection;
                     }
+                    break;
+                case HeroUltimates.AnimateDead:
+                    if(GameState != GameState.MonsterPhase)
+                    {
+                        message = "Animate Dead can only be used when you are fighting monsters. ";
+                        break;
+                    }
+
+                    message = _hero.ActivateLevelOneUltimate(_dungeon);
+                    message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
+                    break;
+                case HeroUltimates.CommandDead:
+                    if (GameState != GameState.MonsterPhase)
+                    {
+                        message = "Command Dead can only be used when you are fighting monsters. ";
+                        break;
+                    }
+                    message = _hero.ActivateLevelTwoUltimate(_dungeon);
+                    message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
                     break;
             }
             
@@ -978,6 +1003,10 @@ if(!_dungeon.HasChest)
                     if (ultimate == HeroUltimates.CalculatedStrike || ultimate == HeroUltimates.BattlefieldPresence)
                         return string.Empty;
                         break;
+                case HeroType.OccultistNecromancer:
+                    if (ultimate == HeroUltimates.AnimateDead || ultimate == HeroUltimates.CommandDead)
+                        return string.Empty;
+                    break;
             }
 
             return "Your hero cannot use that ability. ";

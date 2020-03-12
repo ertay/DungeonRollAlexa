@@ -50,7 +50,7 @@ namespace DungeonRollAlexa.Main.GameObjects
             if (IsExhausted)
                 return "Your hero is exhausted and cannot use the ultimate ability in this dungeon delve. ";
             if (Experience > 4)
-                return "You are now a Battlemage. To use your new ultimate ability say Arcane Fury. ";
+                return "You are a Battlemage now. To use your new ultimate ability say Arcane Fury. ";
             // lets check if valid companion is provided
             if (companion == null || companion.Value != CompanionType.Fighter && companion.Value != CompanionType.Mage)
                 return "Invalid action. To use your hero as a fighter say arcane blade fighter. To use your hero as a mage, say arcane blade mage. ";

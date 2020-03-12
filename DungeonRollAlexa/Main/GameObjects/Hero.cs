@@ -1,25 +1,12 @@
 ﻿using DungeonRollAlexa.Helpers;
 using Newtonsoft.Json;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using DungeonRollAlexa.Helpers;
 using Alexa.NET.Request;
 
 namespace DungeonRollAlexa.Main.GameObjects
 {
-    public enum HeroType
-    {
-        [Description("Spellsword - Specialty: Fighters may be used as mages, and mages may be used as fighters. The ultimate ability is Arcane Blade and when activated lets you use the hero as a fighter or mage. Turns into Battlemage when leveled up and the ultimate ability is replaced with Arcane Fury which lets you discard all monsters, chests, potions, and dice in the dragon's lair. ")]
-        SpellswordBattlemage,
-        [Description("Mercenary - Specialty: When forming the party, you may reroll any number of party dice. The ultimate ability is Calculated Strike which lets you defeat any two monsters. Turns into a Commander when leveled up and gets a new specialty that lets your fighters defeat an additional monster of any type, while the new ultimate ability is Battlefield Presence and lets you reroll any number of party or dungeon dice. ")]
-        MercenaryCommander
-    }
-
-    public enum HeroUltimates
-    {
-        ArcaneBlade, ArcaneFury, CalculatedStrike, BattlefieldPresence,
-    }
 
     /// <summary>
     /// Parent hero class. All heroes should inherit from this class.
@@ -102,9 +89,13 @@ namespace DungeonRollAlexa.Main.GameObjects
         public void UsePartyDie(CompanionType companion)
         {
             // TODO: Consider using this method everywhere Dice need to be moved from party to graveyard
+            // first check if we have a companion that was transformed from a monster
+            bool companionFromEnemyRemoved = PartyDice.RemoveFirst(d => d.IsFromMonster&& d.Companion == companion);
+            if (companionFromEnemyRemoved)
+                return;
 
-            // always try to remove companion created from treasure item or hero ability first
-            
+            // now let's check if we have a companion that was from hero ability or treasure
+
             bool companionFromTreasureRemoved = PartyDice.RemoveFirst(d => d.IsFromTreasureOrHeroAbility && d.Companion == companion);
             if (companionFromTreasureRemoved)
                 return;
@@ -316,6 +307,20 @@ namespace DungeonRollAlexa.Main.GameObjects
             return "This hero does not have the transform ability. ";
         }
 
+        public string RemoveMonsterCompanions()
+        {
+            // removes companions that were transfromed from monsters using a hero ability
+            if (!PartyDice.Any(d => d.IsFromMonster))
+                return ""; // no companions from monsters
+            // we have companions from monsters let's grab them
+            List<PartyDie> companionsToRemove = PartyDice.Where(d => d.IsFromMonster).ToList();
+            PartyDice.RemoveAll(d => d.IsFromMonster);
+            if (companionsToRemove.Count == 1)
+                return $"A {companionsToRemove[0].Companion} was discarded from your party. ";
+            // we have two that we need to remove
+            return $"Two{companionsToRemove[0].Companion}s were discarded from your party. ";
+        }
+
         public string GetPartyStatus()
         {
             string message = $"Your party consists of: {GetPartyAsString()}. ";
@@ -337,12 +342,16 @@ namespace DungeonRollAlexa.Main.GameObjects
 
         public virtual string ActivateLevelOneUltimate() { return string.Empty; }
 
+        public virtual string ActivateLevelOneUltimate(Dungeon dungeon) { return string.Empty; }
+
         public virtual string   ActivateLevelOneUltimate(CompanionType? companion = null, Dungeon dungeon = null) { return string.Empty; }
         // TODO: refactor the above to use slots inside the method and not in gamesession
         // public virtual string ActivateLevelOneUltimate(Dictionary<string, Slot> slots, Dungeon dungeon = null) { return string.Empty; }
         public virtual string ActivateLevelTwoUltimate() { return string.Empty; }
 
         public virtual string ActivateLevelTwoUltimate(CompanionType? companion = null, Dungeon dungeon = null) { return string.Empty; }
+
+        public virtual string ActivateLevelTwoUltimate(Dungeon dungeon) { return string.Empty; }
 
         // public virtual string ActivateLevelTwoUltimate(Dictionary<string, Slot> slots, Dungeon dungeon = null) { return string.Empty; }
 

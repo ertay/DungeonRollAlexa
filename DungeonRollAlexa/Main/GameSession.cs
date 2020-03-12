@@ -49,7 +49,7 @@ namespace DungeonRollAlexa.Main
 
         public SkillResponse Welcome()
         {
-            string message = "Welcome to Dungeon Roll. To begin, say new game. To learn the rules, say rules. Say help at any point during the game if you need help. ";
+            string message = "Welcome to Dungeon Roll Beta Version 2. To begin, say new game. To learn the rules, say rules. Say help at any point during the game if you need help. Say what's new to get information about this version. ";
             _lastResponseMessage = message;
             SaveData();
 
@@ -1252,6 +1252,13 @@ if(!_dungeon.HasChest)
             string rules = "The Dungeon lies before you; you’ve assembled your party of hearty adventurers and have a few tricks up your sleeve. How far will you go to seek glory and fame? Will you risk losing everything? In Dungeon Roll your goal is to collect the most experience points by defeating monsters, battling the dragon, and amassing treasure. You select a Hero avatar, such as a Mercenary, Half-Goblin, or Enchantress, which provides you with unique powers. You assemble your party by rolling seven Party Dice, while Alexa, that would be me,  serves as the Dungeon Lord and rolls a number of Dungeon Dice based on how far you have progressed through the dungeon. You use Champion, Fighter, Cleric, Mage, Thief, and Scroll faces on the Party Dice to defeat monsters such as oozes and skeletons, to claim treasure inside chests, and to revive downed companions with potions. All this fighting in the dungeon is certain to attract the attention of the boss: The Dragon! When three or more Dragon faces appear on the Dungeon Dice, the Adventurer must battle the Dragon. Defeating the dragon is a team effort, requiring three different companion types. After three rounds, you add up your experience points and retire to the inn to celebrate your exploits and to plan your next foray into the next deadly dungeon! You can say help at any point during the game to get information about valid commands. Say new game to start a new game. ";
 
             return ResponseBuilder.Ask(rules, RepromptBuilder.Create(_lastResponseMessage), Session);
+        }
+
+        public SkillResponse ChangeLog()
+        {
+            string message = "Dungeon Roll Beta Version 2 Change log: Added a new hero, Occultist. Say new game to start a new game, say rules for the rules, say help if you need help. ";
+
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
         }
     }
 }

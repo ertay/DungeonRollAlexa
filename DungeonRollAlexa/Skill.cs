@@ -131,6 +131,9 @@ namespace DungeonRollAlexa
             
             switch (request.Intent.Name)
             {
+                case "ChangeLogIntent":
+                    response = _gameSession.ChangeLog();
+                    break;
                 case "NewGameIntent":
                     //start a new game
                     response = _gameSession.SetupNewGame();

@@ -3,7 +3,9 @@
     public enum GameState
     {
         MainMenu,
-        HeroSelection,
+        RandomHeroPrompt,
+        BasicHeroSelection,
+        DetailedHeroSelection,
         PartyFormation,
         MonsterPhase,
         LootPhase,

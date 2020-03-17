@@ -49,7 +49,7 @@ namespace DungeonRollAlexa.Main
 
         public SkillResponse Welcome()
         {
-            string message = "Welcome to Dungeon Roll Beta Version 2. To begin, say new game. To learn the rules, say rules. Say help at any point during the game if you need help. Say what's new to get information about this version. ";
+            string message = "Welcome to Dungeon Roll Beta Version 3. To begin, say new game. To learn the rules, say rules. Say help at any point during the game if you need help. Say what's new to get information about this version. ";
             _lastResponseMessage = message;
             SaveData();
 
@@ -59,30 +59,83 @@ namespace DungeonRollAlexa.Main
         public SkillResponse SetupNewGame()
         {            
             // user requested to start a new game, prepare hero selection
-            GameState = GameState.HeroSelection;
-            _heroSelectorIndex = 0;
-            HeroType heroType = Utilities.GetHeroTypes()[_heroSelectorIndex];
-            string newGameMessage = "Okay, let's pick your hero. ";
-            string message = $"Do you want to pick the following hero: {heroType.GetDescription()}. ";
+            GameState = GameState.RandomHeroPrompt;
+            string message = "Do you want to play with a random hero? ";
             _lastResponseMessage = message;
             SaveData();
-            return ResponseBuilder.Ask(newGameMessage+ message, RepromptBuilder.Create(message), Session);
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+            
+        }
+
+        public SkillResponse DetailedHeroSelection()
+        {
+            GameState = GameState.DetailedHeroSelection;
+            _heroSelectorIndex = 0;
+            HeroType heroType = Utilities.GetHeroTypes()[_heroSelectorIndex];
+            string newGameMessage = "Okay, here is more details about the first hero. ";
+            string message = $"{heroType.GetDescription()}. Do you want to choose this hero? ";
+            _lastResponseMessage = message;
+            SaveData();
+            return ResponseBuilder.Ask(newGameMessage + message, RepromptBuilder.Create(message), Session);
+        }
+
+        public SkillResponse BasicHeroSelection()
+        {
+            GameState = GameState.BasicHeroSelection;
+
+            string message = "Alright. Here is a list of heroes to choose from: Spellsword, Mercenary, or Occultist. Say a hero's name to begin. For detailed hero selection, say detailed hero selection. ";
+            _lastResponseMessage = message;
+            SaveData();
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+        }
+
+        public SkillResponse SelectRandomHero()
+        {
+            var heroTypes = Utilities.GetHeroTypes();
+            _heroSelectorIndex = ThreadSafeRandom.ThisThreadsRandom.Next(heroTypes.Count);
+            return SelectHero();
+        }
+
+        public SkillResponse SelectHero(IntentRequest request)
+        {
+            if (GameState != GameState.BasicHeroSelection)
+                return RepeatLastMessage("Invalid action. ");
+            string hero = request.Intent.Slots["SelectedHero"].Value;
+
+            switch (hero)
+            {
+                case "spellsword":
+                    _heroSelectorIndex = 0;
+                    return SelectHero();
+                case "mercenary":
+                    _heroSelectorIndex = 1;
+                    return SelectHero();
+                case "occultist":
+                    _heroSelectorIndex = 2;
+                    return SelectHero();
+                default:
+                    return RepeatLastMessage($"{hero} is not a valid hero. ");
+            }
         }
 
         public SkillResponse SelectHero()
         {
             // create new hero based on selection and start the game
             HeroType selectedHero = Utilities.GetHeroTypes()[_heroSelectorIndex];
+            string heroMessage = "";
             switch (selectedHero)
             {
                 case HeroType.SpellswordBattlemage:
                     _hero = new SpellswordBattlemageHero();
+                    heroMessage = "You selected the Spellsword. ";
                     break;
                 case HeroType.MercenaryCommander:
                     _hero = new MercenaryCommanderHero();
+                    heroMessage = "You selected the Mercenary. ";
                     break;
                 case HeroType.OccultistNecromancer:
                     _hero = new OccultistNecromancerHero();
+                    heroMessage = "You selected the Occultist. ";
                     break;
             }
 
@@ -91,7 +144,7 @@ namespace DungeonRollAlexa.Main
             string message = InitializeDungeonDelve();
             _lastResponseMessage = message;
             SaveData();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+            return ResponseBuilder.Ask(heroMessage + message, RepromptBuilder.Create(_lastResponseMessage), Session);
         }
 
         private string InitializeDungeonDelve()
@@ -136,7 +189,7 @@ namespace DungeonRollAlexa.Main
                 _heroSelectorIndex = 0;
             }
             HeroType heroType = heroList[_heroSelectorIndex];
-            string message = $"Alright. Do you want to pick the following hero: {heroType.GetDescription()}. ";
+            string message = $"Okay, here is another hero. {heroType.GetDescription()}. Do you want to choose this hero? ";
             _lastResponseMessage = message;
             SaveData();
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(message), Session);
@@ -1022,8 +1075,11 @@ if(!_dungeon.HasChest)
 
             switch (GameState)
             {
-                case GameState.HeroSelection:
+                case GameState.DetailedHeroSelection:
                 response = SelectHero();
+                    break;
+                case GameState.RandomHeroPrompt:
+                    response = SelectRandomHero();
                     break;
                 default:
                     response= RepeatLastMessage("That was not a valid command. ");
@@ -1043,8 +1099,11 @@ if(!_dungeon.HasChest)
 
             switch (GameState)
             {
-                case GameState.HeroSelection:
+                case GameState.DetailedHeroSelection:
                 response = NextHero(); 
+                    break;
+                case GameState.RandomHeroPrompt:
+                    response = BasicHeroSelection();
                     break;
                 default:
                     response = RepeatLastMessage("That was not a valid command. ");
@@ -1212,7 +1271,7 @@ if(!_dungeon.HasChest)
                 case GameState.MainMenu:
                     message = "You are in the main menu. To start a new game, say new game. To listen to the game rules, say rules. Say help at any point in the game to learn about valid commands. ";
                     break;
-                case GameState.HeroSelection:
+                case GameState.DetailedHeroSelection:
                     message = "You are in the hero selection phase. If you want to pick the hero that is presented, say yes. If you want to go to the next hero, say no. ";
                     break;
                 case GameState.PartyFormation:
@@ -1242,6 +1301,12 @@ if(!_dungeon.HasChest)
                 case GameState.KillAdditionalMonster:
                     message = "You can say defeat additional monster to use the hero specialty, or you can say skip, to ignore  this ability. ";
                     break;
+                case GameState.RandomHeroPrompt:
+                    message = "Say yes to start a new game with a random hero. Say no to choose a hero. ";
+                    break;
+                case GameState.BasicHeroSelection:
+                    message = "Say a hero's name to start a new game with that hero. Say detailed hero selection to learn more about each hero's abilities. ";
+                    break;
             }
 
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
@@ -1256,7 +1321,7 @@ if(!_dungeon.HasChest)
 
         public SkillResponse ChangeLog()
         {
-            string message = "Dungeon Roll Beta Version 2 Change log: Added a new hero, Occultist. Say new game to start a new game, say rules for the rules, say help if you need help. ";
+            string message = "Dungeon Roll Beta Version 3 Change log: Simplified hero selection. Say new game to start a new game, say rules for the rules, say help if you need help. ";
 
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
         }

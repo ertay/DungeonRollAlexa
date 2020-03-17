@@ -138,6 +138,12 @@ namespace DungeonRollAlexa
                     //start a new game
                     response = _gameSession.SetupNewGame();
                     break;
+                case "ChooseHeroIntent":
+                    response = _gameSession.SelectHero(request);
+                    break;
+                case "DetailedHeroSelectionIntent":
+                    response = _gameSession.DetailedHeroSelection();
+                    break;
                 case "RulesIntent":
                     response = _gameSession.ReadRules();
                     break;

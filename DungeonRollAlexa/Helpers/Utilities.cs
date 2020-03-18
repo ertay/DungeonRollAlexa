@@ -12,7 +12,7 @@ namespace DungeonRollAlexa.Helpers
     {
         public static List<HeroType> GetHeroTypes()
         {
-            return new List<HeroType>() { HeroType.SpellswordBattlemage, HeroType.MercenaryCommander, HeroType.OccultistNecromancer };
+            return new List<HeroType>() { HeroType.SpellswordBattlemage, HeroType.MercenaryCommander, HeroType.OccultistNecromancer, HeroType.KnightDragonSlayer };
                 }
 
         public static List<TreasureItem> GenerateTreasureItems()

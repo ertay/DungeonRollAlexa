@@ -83,7 +83,7 @@ namespace DungeonRollAlexa.Main
         {
             GameState = GameState.BasicHeroSelection;
 
-            string message = "Alright. Here is a list of heroes to choose from: Spellsword, Mercenary, or Occultist. Say a hero's name to begin. For detailed hero selection, say detailed hero selection. ";
+            string message = "Alright. Here is a list of heroes to choose from: Spellsword, Mercenary, Occultist, or Knight. Say a hero's name to begin. For detailed hero selection, say detailed hero selection. ";
             _lastResponseMessage = message;
             SaveData();
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
@@ -113,6 +113,9 @@ namespace DungeonRollAlexa.Main
                 case "occultist":
                     _heroSelectorIndex = 2;
                     return SelectHero();
+                case "knight":
+                    _heroSelectorIndex = 3;
+                    return SelectHero();
                 default:
                     return RepeatLastMessage($"{hero} is not a valid hero. ");
             }
@@ -136,6 +139,10 @@ namespace DungeonRollAlexa.Main
                 case HeroType.OccultistNecromancer:
                     _hero = new OccultistNecromancerHero();
                     heroMessage = "You selected the Occultist. ";
+                    break;
+                case HeroType.KnightDragonSlayer:
+                    _hero = new KnightDragonSlayerHero();
+                    heroMessage = "You selected the Knight. ";
                     break;
             }
 
@@ -525,7 +532,7 @@ if(!_dungeon.HasChest)
                     break;
                 case GameState.DragonPhase:
                     GameState = newGameState;
-                    return "You are now facing a dragon. You need to select three companions of different types to defeat the dragon and continue. ";
+                    return $"You are now facing a dragon. You need to select {_hero.DefeatDragonCompanionCount} companions of different types to defeat the dragon and continue. ";
                     break;
                 case GameState.RegroupPhase:
                     if (_dungeon.Level == 10)
@@ -589,9 +596,9 @@ if(!_dungeon.HasChest)
             string message = "";
             // first check if we already have selected 3 distinct companions
             int distinctCompanionCount = _hero.PartyDice.Count(d => d.IsSelected == true);
-            if (distinctCompanionCount > 2)
+            if (distinctCompanionCount > _hero.DefeatDragonCompanionCount - 1)
             {
-                message = "You have already selected three companions of different type. To clear the selection and start over, say clear dice selection. ";
+                message = $"You have already selected {_hero.DefeatDragonCompanionCount} companions of different type. To clear the selection and start over, say clear dice selection. ";
                 return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
             }
             var validSlots = request.Intent.Slots.Where(s => s.Value.Value != null);
@@ -601,7 +608,7 @@ if(!_dungeon.HasChest)
             foreach (var item in validSlots)
             {
                 // if we already have selected 3, stop selection
-                if (distinctCompanionCount > 2)
+                if (distinctCompanionCount > _hero.DefeatDragonCompanionCount - 1)
                     break;
 
                 bool isValidCompanion = Enum.TryParse(item.Value.Value.FirstCharToUpper(), out CompanionType companion);
@@ -624,15 +631,15 @@ if(!_dungeon.HasChest)
             if (selectionApplied)
             {
                 string selection = string.Join(", ", _hero.PartyDice.Where(d => d.IsSelected).Select(d => d.Name).ToList());
-                if (distinctCompanionCount > 2)
+                if (distinctCompanionCount > _hero.DefeatDragonCompanionCount - 1)
                     message = $"The current selection is:{selection}. To defeat the dragon, say defeat dragon! ";
                 else
-                    message = $"The current selection is:{selection}. Select {3 - distinctCompanionCount} more to defeat the dragon. ";
+                    message = $"The current selection is:{selection}. Select {_hero.DefeatDragonCompanionCount - distinctCompanionCount} more to defeat the dragon. ";
                 _lastResponseMessage = message;
                 SaveData();
             }
             else
-                message = "Invalid dice selection. You need to select three different companions in your party to defeat the dragon. ";
+                message = $"Invalid dice selection. You need to select {_hero.DefeatDragonCompanionCount} different companions in your party to defeat the dragon. ";
 
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
 
@@ -644,8 +651,8 @@ if(!_dungeon.HasChest)
                 return ResponseBuilder.Ask("You currently do not see a dragon you can attack. ", RepromptBuilder.Create(_lastResponseMessage), Session);
             // player wants to defeat dragon, let's check if they have 3 distinct dice
             int distinctCompanionCount = _hero.PartyDice.Count(d => d.IsSelected);
-            if(distinctCompanionCount < 3)
-                return ResponseBuilder.Ask("You need to select three distinct companions to defeat the dragon. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+            if(distinctCompanionCount < _hero.DefeatDragonCompanionCount)
+                return ResponseBuilder.Ask($"You need to select {_hero.DefeatDragonCompanionCount} distinct companions to defeat the dragon. ", RepromptBuilder.Create(_lastResponseMessage), Session);
 
             // OK we have 3 party dice selected, let's kill the dragon
             var treasure = _dungeon.DefeatDragon();
@@ -979,6 +986,15 @@ if(!_dungeon.HasChest)
                     message = _hero.ActivateLevelTwoUltimate(_dungeon);
                     message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
                     break;
+                case HeroUltimates.Battlecry:
+                    if (GameState != GameState.MonsterPhase)
+                    {
+                        message = "Battlecry can only be used when you are fighting monsters. ";
+                        break;
+                    }
+                    message = _hero.ActivateLevelOneUltimate(_dungeon);
+                    message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
+                    break;
             }
             
             _lastResponseMessage = message;
@@ -1058,6 +1074,10 @@ if(!_dungeon.HasChest)
                         break;
                 case HeroType.OccultistNecromancer:
                     if (ultimate == HeroUltimates.AnimateDead || ultimate == HeroUltimates.CommandDead)
+                        return string.Empty;
+                    break;
+                case HeroType.KnightDragonSlayer:
+                    if (ultimate == HeroUltimates.Battlecry )
                         return string.Empty;
                     break;
             }
@@ -1321,7 +1341,7 @@ if(!_dungeon.HasChest)
 
         public SkillResponse ChangeLog()
         {
-            string message = "Dungeon Roll Beta Version 3 Change log: Simplified hero selection. Say new game to start a new game, say rules for the rules, say help if you need help. ";
+            string message = "Dungeon Roll Beta Version 3 Change log: Simplified hero selection. Added the Knight as a new hero. Say new game to start a new game, say rules for the rules, say help if you need help. ";
 
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
         }

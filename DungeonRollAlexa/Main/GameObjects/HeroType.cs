@@ -10,6 +10,8 @@ namespace DungeonRollAlexa.Main.GameObjects
         MercenaryCommander,
         [Description("Occultist - Specialty: Clerics may be used as mages, and mages may be used as clerics. The ultimate ability is Animate Dead which transforms a skeleton into a fighter that gets discarded when you complete a level. Turns into Necromancer when leveled up and the ultimate ability is replaced with Command Dead which transforms two skeletons to fighters that get discarded when you complete a level. ")]
         OccultistNecromancer,
+        [Description("Knight - Specialty: When forming the party, all scrolls become champions. The ultimate ability is Battlecry which transforms all monsters into dragon faces and moves them to the Dragon's Lair. Turns into Dragon Slayer when leveled up and can defeat a dragon with two different companions instead of three. ")]
+        KnightDragonSlayer,
 
     }
 }   

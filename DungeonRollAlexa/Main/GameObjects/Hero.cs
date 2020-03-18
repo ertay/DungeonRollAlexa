@@ -37,8 +37,12 @@ namespace DungeonRollAlexa.Main.GameObjects
         
         
         public bool HasPartyFormationActions { get; set; }
+        
         [JsonIgnore]
         public virtual string PartyFormationActionMessage { get;  }
+
+        public int DefeatDragonCompanionCount { get; set; }
+
         public  Hero()
         {
             IsExhausted = false;
@@ -47,6 +51,7 @@ namespace DungeonRollAlexa.Main.GameObjects
             PartyDice = new List<PartyDie>();
             Graveyard =0;
             Inventory = new List<TreasureItem>();
+            DefeatDragonCompanionCount = 3;
             
         }
 
@@ -56,7 +61,7 @@ namespace DungeonRollAlexa.Main.GameObjects
             Graveyard = 0;
         }
 
-        public string RollPartyDice(int partySize = 7)
+        public virtual string RollPartyDice(int partySize = 7)
         {
             // roll party dice to create your party
             // use the size to determine the size of party as some heroes may have a larger party
@@ -147,14 +152,14 @@ namespace DungeonRollAlexa.Main.GameObjects
         {
             // player defeated dragon, let's remove the dice selection and move companions to graveyard
             string selectedCompanions= string.Join(", ", PartyDice.Where(d => d.IsSelected).Select(d => d.Name).ToList());
-            UsePartyDie(PartyDice.First(d => d.IsSelected).Companion);
-            UsePartyDie(PartyDice.First(d => d.IsSelected).Companion);
-            UsePartyDie(PartyDice.First(d => d.IsSelected).Companion);
-
-            // TODO: Defeating dragon can be with two companions, fix this
-
+            int companionCount = PartyDice.Count(d => d.IsSelected);
+            for (int i = 0; i < companionCount; i++)
+            {
+                UsePartyDie(PartyDice.First(d => d.IsSelected).Companion);
+            }
+            
             Inventory.Add(treasureItem);
-            string message = $"You used your {selectedCompanions} to defeat the dragon. You acquired {treasureItem.TreasureType.GetDescription()}. ";
+            string message = $"You used your {selectedCompanions}, to defeat the dragon. You acquired {treasureItem.TreasureType.GetDescription()}. ";
             message += GainExperiencePoints(1);
             return message;
         }

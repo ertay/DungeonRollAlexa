@@ -235,6 +235,9 @@ namespace DungeonRollAlexa
                 case "CommandDeadIntent":
                     response = _gameSession.ActivateUltimate(HeroUltimates.CommandDead, request);
                     break;
+                case "BattlecryIntent":
+                    response = _gameSession.ActivateUltimate(HeroUltimates.Battlecry, request);
+                    break;
             }
 
             return response;

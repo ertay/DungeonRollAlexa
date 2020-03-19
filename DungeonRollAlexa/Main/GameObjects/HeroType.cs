@@ -12,6 +12,8 @@ namespace DungeonRollAlexa.Main.GameObjects
         OccultistNecromancer,
         [Description("Knight - Specialty: When forming the party, all scrolls become champions. The ultimate ability is Battlecry which transforms all monsters into dragon faces and moves them to the Dragon's Lair. Turns into Dragon Slayer when leveled up and can defeat a dragon with two different companions instead of three. ")]
         KnightDragonSlayer,
+        [Description("Minstrel - Specialty: Thieves may be used as mages, and mages may be used as thieves. The ultimate ability is Bard's Song which discards all dragon dice from the Dragon's Lair. Turns into Bard when leveled up and gets an additional specialty which makes your champions defeat an additional monster. ")]
+        MinstrelBard,
 
     }
 }   

@@ -83,7 +83,7 @@ namespace DungeonRollAlexa.Main
         {
             GameState = GameState.BasicHeroSelection;
 
-            string message = "Alright. Here is a list of heroes to choose from: Spellsword, Mercenary, Occultist, or Knight. Say a hero's name to begin. For detailed hero selection, say detailed hero selection. ";
+            string message = "Alright. Here is a list of heroes to choose from: Spellsword, Mercenary, Occultist, Knight, or Minstrel. Say a hero's name to begin. For detailed hero selection, say detailed hero selection. ";
             _lastResponseMessage = message;
             SaveData();
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
@@ -116,6 +116,9 @@ namespace DungeonRollAlexa.Main
                 case "knight":
                     _heroSelectorIndex = 3;
                     return SelectHero();
+                case "minstrel":
+                    _heroSelectorIndex = 4;
+                    return SelectHero();
                 default:
                     return RepeatLastMessage($"{hero} is not a valid hero. ");
             }
@@ -143,6 +146,10 @@ namespace DungeonRollAlexa.Main
                 case HeroType.KnightDragonSlayer:
                     _hero = new KnightDragonSlayerHero();
                     heroMessage = "You selected the Knight. ";
+                    break;
+                case HeroType.MinstrelBard:
+                    _hero = new MinstrelBardHero();
+                    heroMessage = "You selected the Minstrel. ";
                     break;
             }
 
@@ -246,9 +253,9 @@ namespace DungeonRollAlexa.Main
             message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
             // if hero is a commander and fighter was used, let's check if there's an additional target for the fighter
 
-            if (_hero.HeroType == HeroType.MercenaryCommander && _hero.Experience > 4 && companionType == CompanionType.Fighter && _dungeon.HasMonsters)
+            if (_dungeon.HasMonsters && _hero.CanKillAdditionalMonster(companionType))
             {
-                message += "Your fighter can defeat an additional monster. To use this ability, say defeat additional monster. Otherwise, say skip to ignore this ability. ";
+                message += $"Your {companionType} can defeat an additional monster. To use this ability, say defeat additional monster. Otherwise, say skip to ignore this ability. ";
                 GameState = GameState.KillAdditionalMonster;
             }
             _lastResponseMessage = message;
@@ -266,14 +273,15 @@ namespace DungeonRollAlexa.Main
             if (!_dungeon.IsMonsterInDungeon(monster))
             {
                 // monster is not present in dungeon
-                message = $"{monster} is not a valid target to defeat. Try saying defeat additional monster again and provide a different monster name. If you want to skip the fighter's ability to kill an additional monster, say skip. ";
+                message = $"{monster} is not a valid target to defeat. Try saying defeat additional monster again and provide a different monster name. If you want to skip this ability, say skip. ";
                 return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
             }
 
             // valid additional monster selected let's kill it
             var targetList = new List<DungeonDieType>();
-            targetList.Add(DungeonDieType.Goblin);
-            message += $"Your fighter additionally defeated ";
+            if(_hero.CompanionThatKillsAdditionalMonster == CompanionType.Fighter)
+                targetList.Add(DungeonDieType.Goblin);
+            message += $"Your {_hero.CompanionThatKillsAdditionalMonster.Value} additionally defeated ";
             message += $"{_dungeon.DefeatMonsters(monster, targetList)}. ";
 
             message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
@@ -899,15 +907,7 @@ if(!_dungeon.HasChest)
             }
             Enum.TryParse(companion.FirstCharToUpper(), out CompanionType companionType);
             // let's check if the selected hero has a transform ability
-            switch (_hero.HeroType)
-            {
-                case HeroType.SpellswordBattlemage:
-                    message = _hero.TransformCompanion(companionType);
-                    break;
-                default:
-                    message = _hero.TransformCompanion(companionType);
-                    break;
-            }
+            message = _hero.TransformCompanion(companionType);
 
             SaveData();
 
@@ -995,6 +995,10 @@ if(!_dungeon.HasChest)
                     message = _hero.ActivateLevelOneUltimate(_dungeon);
                     message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
                     break;
+                case HeroUltimates.BardsSong:
+                    message = _hero.ActivateLevelOneUltimate(_dungeon);
+                    message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
+                    break;
             }
             
             _lastResponseMessage = message;
@@ -1078,6 +1082,10 @@ if(!_dungeon.HasChest)
                     break;
                 case HeroType.KnightDragonSlayer:
                     if (ultimate == HeroUltimates.Battlecry )
+                        return string.Empty;
+                    break;
+                case HeroType.MinstrelBard:
+                    if (ultimate == HeroUltimates.BardsSong)
                         return string.Empty;
                     break;
             }
@@ -1341,7 +1349,7 @@ if(!_dungeon.HasChest)
 
         public SkillResponse ChangeLog()
         {
-            string message = "Dungeon Roll Beta Version 3 Change log: Simplified hero selection. Added the Knight as a new hero. Say new game to start a new game, say rules for the rules, say help if you need help. ";
+            string message = "Dungeon Roll Beta Version 3 Change log: Simplified hero selection. Added the Knight and Minstrel as new heroes. Fixed a bug that triggered the flee command unintentionally. Say new game to start a new game, say rules for the rules, say help if you need help. ";
 
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
         }

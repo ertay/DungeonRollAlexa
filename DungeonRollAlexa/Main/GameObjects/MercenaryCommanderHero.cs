@@ -18,6 +18,8 @@ namespace DungeonRollAlexa.Main.GameObjects
                 return "Your hero leveled up and became a Commander. Your fighters can now defeat an additional monster and Battlefield Presence is your new ultimate ability which lets you roll any dungeon and party dice. ";
             } }
 
+        public override CompanionType? CompanionThatKillsAdditionalMonster => CompanionType.Fighter;
+
         public MercenaryCommanderHero() : base()
         {
             HeroType = HeroType.MercenaryCommander;
@@ -60,6 +62,13 @@ namespace DungeonRollAlexa.Main.GameObjects
         {
             base.LevelUp();
             HasPartyFormationActions = false;
+        }
+
+        public override bool CanKillAdditionalMonster(CompanionType companion)
+        {
+            if (IsLeveledUp && companion == CompanionThatKillsAdditionalMonster.Value)
+                return true;
+            return false;
         }
     }
 }

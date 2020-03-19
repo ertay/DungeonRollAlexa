@@ -2,6 +2,6 @@
 {
     public enum HeroUltimates
     {
-        ArcaneBlade, ArcaneFury, CalculatedStrike, BattlefieldPresence, AnimateDead, CommandDead, Battlecry,
+        ArcaneBlade, ArcaneFury, CalculatedStrike, BattlefieldPresence, AnimateDead, CommandDead, Battlecry, BardsSong,
     }
 }   

@@ -7,7 +7,6 @@ using Alexa.NET.Request;
 
 namespace DungeonRollAlexa.Main.GameObjects
 {
-
     /// <summary>
     /// Parent hero class. All heroes should inherit from this class.
     /// </summary>
@@ -42,6 +41,8 @@ namespace DungeonRollAlexa.Main.GameObjects
         public virtual string PartyFormationActionMessage { get;  }
 
         public int DefeatDragonCompanionCount { get; set; }
+        [JsonIgnore]
+        public virtual CompanionType? CompanionThatKillsAdditionalMonster => null;
 
         public  Hero()
         {
@@ -363,6 +364,16 @@ namespace DungeonRollAlexa.Main.GameObjects
         public virtual void LevelUp() 
         {
             IsLeveledUp = true;
+        }
+
+        /// <summary>
+        /// Returns true if the selected companion can kill an additional monster.
+        /// </summary>
+        /// <param name="companion"></param>
+        /// <returns></returns>
+        public virtual bool CanKillAdditionalMonster(CompanionType companion)
+        {
+            return false;
         }
     }
 }   

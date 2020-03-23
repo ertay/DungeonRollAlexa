@@ -165,17 +165,23 @@ namespace DungeonRollAlexa.Main.GameObjects
             return message;
         }
 
-        public string AcquireTreasureItems(CompanionType companion, List<TreasureItem> treasureItems)
+        public string AcquireTreasureItems(CompanionType? companion, List<TreasureItem> treasureItems)
         {
             // remove the companion from our party dice and add it to the graveyard
-            var companionDie = PartyDice.First(d => d.Companion == companion);
-            UsePartyDie(companion);
+            if (companion != null)
+            {
+                UsePartyDie(companion.Value);
+            }
 
 
             // add the treasure items to our inventory
             Inventory.AddRange(treasureItems);
-
-            string message = treasureItems.Count > 1 ? $"You used a {companionDie.Name} to open {treasureItems.Count} chests and received: ": $"You used a {companionDie.Name} to open {treasureItems.Count} chest and received: ";
+            string message;
+            // if we used a companion to open chests, add that to the message, otherwise generic opened a chest message
+            if (companion != null)
+                    message = treasureItems.Count > 1 ? $"You used a {companion} to open {treasureItems.Count} chests and received: " : $"You used a {companion} to open {treasureItems.Count} chest and received: ";
+            else
+                message = treasureItems.Count > 1 ? $"You opened {treasureItems.Count} chests and received: " : $"You opened {treasureItems.Count} chest and received: ";
 
             List<string> stringItemList = new List<string>();
 
@@ -358,6 +364,8 @@ namespace DungeonRollAlexa.Main.GameObjects
         public virtual string ActivateLevelTwoUltimate(CompanionType? companion = null, Dungeon dungeon = null) { return string.Empty; }
 
         public virtual string ActivateLevelTwoUltimate(Dungeon dungeon) { return string.Empty; }
+        
+        public virtual string ActivateLevelTwoUltimate(TreasureType treasure, Dungeon dungeon) { return string.Empty; }
 
         // public virtual string ActivateLevelTwoUltimate(Dictionary<string, Slot> slots, Dungeon dungeon = null) { return string.Empty; }
 

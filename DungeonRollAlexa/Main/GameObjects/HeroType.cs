@@ -14,6 +14,8 @@ namespace DungeonRollAlexa.Main.GameObjects
         KnightDragonSlayer,
         [Description("Minstrel - Specialty: Thieves may be used as mages, and mages may be used as thieves. The ultimate ability is Bard's Song which discards all dragon dice from the Dragon's Lair. Turns into Bard when leveled up and gets an additional specialty which makes your champions defeat an additional monster. ")]
         MinstrelBard,
+        [Description("Crusader - Specialty: Fighters may be used as clerics, and clerics may be used as fighters. The ultimate ability is Holy Strike and when activated lets you use the hero as a fighter or cleric. Turns into Paladin when leveled up and the ultimate ability is replaced with Divine Intervention which lets you discard one treasure item to open all chests, quaff all potions, discard all monsters, and discard all dragon dice in the Dragon's Lair. ")]
+        CrusaderPaladin,
 
     }
 }   

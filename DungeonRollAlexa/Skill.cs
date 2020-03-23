@@ -241,6 +241,12 @@ namespace DungeonRollAlexa
                 case "BardsSongIntent":
                     response = _gameSession.ActivateUltimate(HeroUltimates.BardsSong, request);
                     break;
+                case "HolyStrikeIntent":
+                    response = _gameSession.ActivateUltimate(HeroUltimates.HolyStrike, request);
+                    break;
+                case "DivineInterventionIntent":
+                    response = _gameSession.ActivateUltimate(HeroUltimates.DivineIntervention, request);
+                    break;
             }
 
             return response;

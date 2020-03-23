@@ -49,7 +49,7 @@ namespace DungeonRollAlexa.Main
 
         public SkillResponse Welcome()
         {
-            string message = "Welcome to Dungeon Roll Beta Version 3. To begin, say new game. To learn the rules, say rules. Say help at any point during the game if you need help. Say what's new to get information about this version. ";
+            string message = "Welcome to Dungeon Roll Beta Version 4. To begin, say new game. To learn the rules, say rules. Say help at any point during the game if you need help. Say what's new to get information about this version. ";
             _lastResponseMessage = message;
             SaveData();
 
@@ -83,7 +83,7 @@ namespace DungeonRollAlexa.Main
         {
             GameState = GameState.BasicHeroSelection;
 
-            string message = "Alright. Here is a list of heroes to choose from: Spellsword, Mercenary, Occultist, Knight, or Minstrel. Say a hero's name to begin. For detailed hero selection, say detailed hero selection. ";
+            string message = "Alright. Here is a list of heroes to choose from: Spellsword, Mercenary, Occultist, Knight, Minstrel, or Crusader. Say a hero's name to begin. For detailed hero selection, say detailed hero selection. ";
             _lastResponseMessage = message;
             SaveData();
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
@@ -119,6 +119,9 @@ namespace DungeonRollAlexa.Main
                 case "minstrel":
                     _heroSelectorIndex = 4;
                     return SelectHero();
+                case "crusader":
+                    _heroSelectorIndex = 5;
+                    return SelectHero();
                 default:
                     return RepeatLastMessage($"{hero} is not a valid hero. ");
             }
@@ -150,6 +153,10 @@ namespace DungeonRollAlexa.Main
                 case HeroType.MinstrelBard:
                     _hero = new MinstrelBardHero();
                     heroMessage = "You selected the Minstrel. ";
+                    break;
+                case HeroType.CrusaderPaladin:
+                    _hero = new CrusaderPaladinHero();
+                    heroMessage = "You selected the Crusader. ";
                     break;
             }
 
@@ -999,6 +1006,35 @@ if(!_dungeon.HasChest)
                     message = _hero.ActivateLevelOneUltimate(_dungeon);
                     message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
                     break;
+                case HeroUltimates.HolyStrike:
+                    string crusaderCompanion = request.Intent.Slots["SelectedCompanion"].Value;
+                    bool parseComplete1 = Enum.TryParse(crusaderCompanion.FirstCharToUpper(), out CompanionType ct1);
+                    CompanionType? companionType1 = null;
+                    if (parseComplete1)
+                        companionType1 = ct1;
+                    message = _hero.ActivateLevelOneUltimate(companionType1);
+                    break;
+                case HeroUltimates.DivineIntervention:
+                    if (GameState != GameState.MonsterPhase && GameState != GameState.LootPhase && GameState != GameState.DragonPhase)
+                    {
+                        message += "Divine Intervention can only be used during the monster phase, loot phase, or dragon phase. ";
+                        break;
+                    }
+                    // load the treasure and validate
+                    string selectedTreasure = request.Intent.Slots["SelectedTreasure"].Value;
+                    var treasureItem = _hero.GetTreasureFromInventory(selectedTreasure);
+                    if(treasureItem == null)
+                    {
+                        message += $"{selectedTreasure} is not in your inventory. You need to use a treasure item from your inventory to cast Divine Intervention. Say inventory to check what you have in your inventory. ";
+                        break;
+                    }
+                    message += _hero.ActivateLevelTwoUltimate(treasureItem.TreasureType, _dungeon);
+                    // if no potions quaffed, we check dungeon's state, otherwise go to revive state
+                    if (_hero.RevivalsRemaining < 1)
+                        message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
+                    else
+                        GameState = GameState.RevivingCompanions;
+                    break;
             }
             
             _lastResponseMessage = message;
@@ -1086,6 +1122,10 @@ if(!_dungeon.HasChest)
                     break;
                 case HeroType.MinstrelBard:
                     if (ultimate == HeroUltimates.BardsSong)
+                        return string.Empty;
+                    break;
+                case HeroType.CrusaderPaladin:
+                    if (ultimate == HeroUltimates.HolyStrike || ultimate == HeroUltimates.DivineIntervention)
                         return string.Empty;
                     break;
             }
@@ -1349,7 +1389,7 @@ if(!_dungeon.HasChest)
 
         public SkillResponse ChangeLog()
         {
-            string message = "Dungeon Roll Beta Version 3 Change log: Simplified hero selection. Added the Knight and Minstrel as new heroes. Fixed a bug that triggered the flee command unintentionally. Say new game to start a new game, say rules for the rules, say help if you need help. ";
+            string message = "Dungeon Roll Beta Version 4 Change log: Added Crusader as a new hero. Say new game to start a new game, say rules for the rules, say help if you need help. ";
 
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
         }

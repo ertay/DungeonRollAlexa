@@ -262,9 +262,9 @@ namespace DungeonRollAlexa.Main.GameObjects
             if (!HasChest)
                 return null;
             List<TreasureItem> items = new List<TreasureItem>();
-            int numberOfChests = DungeonDice.Count(d => d.DungeonDieType == DungeonDieType.Chest);
+
             // remove all chests
-            DungeonDice.RemoveAll(d => d.DungeonDieType == DungeonDieType.Chest);
+            int numberOfChests = DungeonDice.RemoveAll(d => d.DungeonDieType == DungeonDieType.Chest);
             // now lets add the treasure items to the list we will return
             for (int i = 0; i < numberOfChests; i++)
             {

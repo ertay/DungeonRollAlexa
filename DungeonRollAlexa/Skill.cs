@@ -247,6 +247,12 @@ namespace DungeonRollAlexa
                 case "DivineInterventionIntent":
                     response = _gameSession.ActivateUltimate(HeroUltimates.DivineIntervention, request);
                     break;
+                case "PleaForHelpIntent":
+                    response = _gameSession.ActivateUltimate(HeroUltimates.PleaForHelp, request);
+                    break;
+                case "PullRankIntent":
+                    response = _gameSession.ActivateUltimate(HeroUltimates.PullRank, request);
+                    break;
             }
 
             return response;

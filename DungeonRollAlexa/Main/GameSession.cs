@@ -83,7 +83,7 @@ namespace DungeonRollAlexa.Main
         {
             GameState = GameState.BasicHeroSelection;
 
-            string message = "Alright. Here is a list of heroes to choose from: Spellsword, Mercenary, Occultist, Knight, Minstrel, or Crusader. Say a hero's name to begin. For detailed hero selection, say detailed hero selection. ";
+            string message = "Alright. Here is a list of heroes to choose from: Spellsword, Mercenary, Occultist, Knight, Minstrel, Crusader, or Half-Goblin. Say a hero's name to begin. For detailed hero selection, say detailed hero selection. ";
             _lastResponseMessage = message;
             SaveData();
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
@@ -122,6 +122,9 @@ namespace DungeonRollAlexa.Main
                 case "crusader":
                     _heroSelectorIndex = 5;
                     return SelectHero();
+                case "half goblin":
+                    _heroSelectorIndex = 6;
+                    return SelectHero();
                 default:
                     return RepeatLastMessage($"{hero} is not a valid hero. ");
             }
@@ -157,6 +160,10 @@ namespace DungeonRollAlexa.Main
                 case HeroType.CrusaderPaladin:
                     _hero = new CrusaderPaladinHero();
                     heroMessage = "You selected the Crusader. ";
+                    break;
+                case HeroType.HalfGoblinChieftain:
+                    _hero = new HalfGoblinChieftainHero();
+                    heroMessage = "You selected the Half-Goblin. ";
                     break;
             }
 
@@ -300,7 +307,16 @@ namespace DungeonRollAlexa.Main
         public SkillResponse DrinkPotions(IntentRequest request)
         {
             if (GameState != GameState.LootPhase)
-                return ResponseBuilder.Ask("Potions can only be quaffed during the loot phase. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+            {
+                if (_hero != null && _hero.HeroType == HeroType.HalfGoblinChieftain)
+                {
+                    if (GameState != GameState.MonsterPhase)
+                        return ResponseBuilder.Ask("Potions can only be quaffed during the monster or loot phase. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+                }
+                else
+                    return ResponseBuilder.Ask("Potions can only be quaffed during the loot phase. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+            }
+                
 
             string message = "";
             // let's check companion first
@@ -361,7 +377,16 @@ namespace DungeonRollAlexa.Main
         public SkillResponse OpenChestAction(IntentRequest request)
         {
             if (GameState != GameState.LootPhase)
-                return ResponseBuilder.Ask("Chests can only be opened during the loot phase. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+            {
+                if (_hero != null && _hero.HeroType == HeroType.HalfGoblinChieftain)
+                {
+                    if (GameState != GameState.MonsterPhase)
+                        return ResponseBuilder.Ask("Chests can only be opened during the monster or loot phase. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+                }
+                else
+                    return ResponseBuilder.Ask("Chests can only be opened during the loot phase. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+            }
+                
             // user wants to open chest
             string message = "";
             string companion = request.Intent.Slots["SelectedCompanion"].Value;
@@ -1035,6 +1060,25 @@ if(!_dungeon.HasChest)
                     else
                         GameState = GameState.RevivingCompanions;
                     break;
+                case HeroUltimates.PleaForHelp:
+                    if (GameState != GameState.MonsterPhase)
+                    {
+                        message = "Plea For Help can only be used when you are fighting monsters. ";
+                        break;
+                    }
+
+                    message = _hero.ActivateLevelOneUltimate(_dungeon);
+                    message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
+                    break;
+                case HeroUltimates.PullRank:
+                    if (GameState != GameState.MonsterPhase)
+                    {
+                        message = "Pull Rank can only be used when you are fighting monsters. ";
+                        break;
+                    }
+                    message = _hero.ActivateLevelTwoUltimate(_dungeon);
+                    message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
+                    break;
             }
             
             _lastResponseMessage = message;
@@ -1126,6 +1170,10 @@ if(!_dungeon.HasChest)
                     break;
                 case HeroType.CrusaderPaladin:
                     if (ultimate == HeroUltimates.HolyStrike || ultimate == HeroUltimates.DivineIntervention)
+                        return string.Empty;
+                    break;
+                case HeroType.HalfGoblinChieftain:
+                    if (ultimate == HeroUltimates.PleaForHelp || ultimate == HeroUltimates.PullRank)
                         return string.Empty;
                     break;
             }
@@ -1389,7 +1437,7 @@ if(!_dungeon.HasChest)
 
         public SkillResponse ChangeLog()
         {
-            string message = "Dungeon Roll Beta Version 4 Change log: Added Crusader as a new hero. Say new game to start a new game, say rules for the rules, say help if you need help. ";
+            string message = "Dungeon Roll Beta Version 4 Change log: Added Crusader, Half-Goblin, and Enchantress as new heroes. All heroes from the base game are now completed. Say new game to start a new game, say rules for the rules, say help if you need help. ";
 
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
         }

@@ -330,7 +330,7 @@ namespace DungeonRollAlexa.Main.GameObjects
             if (companionsToRemove.Count == 1)
                 return $"A {companionsToRemove[0].Companion} was discarded from your party. ";
             // we have two that we need to remove
-            return $"Two{companionsToRemove[0].Companion}s were discarded from your party. ";
+            return $"Two{companionsToRemove[0].Companion} companions were discarded from your party. ";
         }
 
         public string GetPartyStatus()

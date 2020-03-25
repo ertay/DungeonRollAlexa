@@ -50,8 +50,8 @@ namespace DungeonRollAlexa.Main.GameObjects
             if (IsExhausted)
                 return "Your hero is exhausted and cannot use the ultimate ability in this dungeon delve. ";
 
-            //if (Experience < 5)
-                //return "You are a Mercenary and do not have the ability to perform Battlefield Presence yet. You can do this when you level up and become a commander. For now, you can use calculated strike. ";
+            if (!IsLeveledUp)
+                return "Your hero is still a Mercenary and cannot use the Battlefield Presence ultimate. Try saying Calculated Strike instead. ";
 
             IsExhausted = true;
             

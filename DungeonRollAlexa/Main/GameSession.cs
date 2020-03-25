@@ -83,7 +83,7 @@ namespace DungeonRollAlexa.Main
         {
             GameState = GameState.BasicHeroSelection;
 
-            string message = "Alright. Here is a list of heroes to choose from: Spellsword, Mercenary, Occultist, Knight, Minstrel, Crusader, or Half-Goblin. Say a hero's name to begin. For detailed hero selection, say detailed hero selection. ";
+            string message = "Alright. Here is a list of heroes to choose from: Spellsword, Mercenary, Occultist, Knight, Minstrel, Crusader, Half-Goblin, or Enchantress. Say a hero's name to begin. For detailed hero selection, say detailed hero selection. ";
             _lastResponseMessage = message;
             SaveData();
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
@@ -125,6 +125,9 @@ namespace DungeonRollAlexa.Main
                 case "half goblin":
                     _heroSelectorIndex = 6;
                     return SelectHero();
+                case "enchantress":
+                    _heroSelectorIndex = 7;
+                    return SelectHero();
                 default:
                     return RepeatLastMessage($"{hero} is not a valid hero. ");
             }
@@ -164,6 +167,10 @@ namespace DungeonRollAlexa.Main
                 case HeroType.HalfGoblinChieftain:
                     _hero = new HalfGoblinChieftainHero();
                     heroMessage = "You selected the Half-Goblin. ";
+                    break;
+                case HeroType.EnchantressBeguiler:
+                    _hero = new EnchantressBeguilerHero();
+                    heroMessage = "You selected the Enchantress. ";
                     break;
             }
 
@@ -827,7 +834,7 @@ if(!_dungeon.HasChest)
         /// <returns></returns>
         public SkillResponse SelectDice(IntentRequest request)
         {
-            if (GameState != GameState.StandardDiceSelection && GameState != GameState.PartyFormation && GameState != GameState.DragonPhase && GameState != GameState.DiceSelectionForCalculatedStrike)
+            if (GameState != GameState.StandardDiceSelection && GameState != GameState.PartyFormation && GameState != GameState.DragonPhase && GameState != GameState.DiceSelectionForCalculatedStrike && GameState != GameState.DiceSelectionForCharmMonster && GameState != GameState.DiceSelectionForMesmerize)
             {
                 // we are not in a dice selection phase
                 string errorMessage = "Invalid action. Dice selection can be done after using a scroll, when you are fighting the dragon, or using certain hero abilities. ";
@@ -841,7 +848,13 @@ if(!_dungeon.HasChest)
 
             if (GameState == GameState.DiceSelectionForCalculatedStrike)
                 return CalculatedStrikeSelectDice(request);
-            
+
+            if (GameState == GameState.DiceSelectionForCharmMonster)
+                return CharmMonsterSelectDice(request);
+
+            if (GameState == GameState.DiceSelectionForMesmerize)
+                return MesmerizeSelectDice(request);
+
             SkillResponse response = null;
             string message = "";
             var dieList = new List<Die>();
@@ -881,7 +894,7 @@ if(!_dungeon.HasChest)
 
         public SkillResponse ClearDiceSelection()
         {
-            if (GameState != GameState.StandardDiceSelection && GameState != GameState.PartyFormation && GameState != GameState.DragonPhase && GameState != GameState.DiceSelectionForCalculatedStrike)
+            if (GameState != GameState.StandardDiceSelection && GameState != GameState.PartyFormation && GameState != GameState.DragonPhase && GameState != GameState.DiceSelectionForCalculatedStrike && GameState != GameState.DiceSelectionForCharmMonster && GameState != GameState.DiceSelectionForMesmerize)
             {
                 string errorMessage = "Invalid action. Dice selection can be done after using a scroll or when you are fighting the dragon.";
                 return ResponseBuilder.Ask(errorMessage, RepromptBuilder.Create(_lastResponseMessage), Session);
@@ -929,6 +942,10 @@ if(!_dungeon.HasChest)
                 // cannot use transform
                 return ResponseBuilder.Ask("You can't transform your companions at this time. ", RepromptBuilder.Create(_lastResponseMessage), Session);
             }
+
+            // if hero is enchantress, use a different transform
+            if (_hero.HeroType == HeroType.EnchantressBeguiler)
+                return TransformScroll(request);
             string message = "";
             // check if source companion is in party
             string companion = request.Intent.Slots["SourceCompanion"].Value;
@@ -939,6 +956,27 @@ if(!_dungeon.HasChest)
             }
             Enum.TryParse(companion.FirstCharToUpper(), out CompanionType companionType);
             // let's check if the selected hero has a transform ability
+            message = _hero.TransformCompanion(companionType);
+
+            SaveData();
+
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+        }
+
+        private SkillResponse TransformScroll(IntentRequest request)
+        {
+            // transforms a scroll into the specified companion
+            string message = "";
+            // check if scroll is in party
+            if (!_hero.PartyDice.Any(d => d.Companion == CompanionType.Scroll))
+                return ResponseBuilder.Ask("You do not have a scroll in your party. You can transform scrolls when you have them in your party. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+            // we have a scroll let's check if companion is valid
+            string companion = request.Intent.Slots["SourceCompanion"].Value;
+            
+            bool parseComplete = Enum.TryParse(companion.FirstCharToUpper(), out CompanionType companionType);
+            if(!parseComplete)
+                return ResponseBuilder.Ask($"{companion} is not a valid companion. Valid companions are: fighter, mage, cleric, thief, and champion. Try saying transform scroll again and provide a valid companion. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+            // we have a valid companion let's transform
             message = _hero.TransformCompanion(companionType);
 
             SaveData();
@@ -1079,6 +1117,34 @@ if(!_dungeon.HasChest)
                     message = _hero.ActivateLevelTwoUltimate(_dungeon);
                     message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
                     break;
+                case HeroUltimates.CharmMonster:
+                    if (GameState != GameState.MonsterPhase)
+                    {
+                        message = "Charm Monster can only be used when you are fighting monsters. ";
+                        break;
+                    }
+                    message = _hero.ActivateLevelOneUltimate();
+                    if (string.IsNullOrEmpty(message))
+                    {
+                        message = "You are preparing to Charm a monster. Select a monster to charm and transform it to a potion. For example, say select goblin. ";
+                        GameState = GameState.DiceSelectionForCharmMonster;
+                    }
+
+                    break;
+                case HeroUltimates.Mesmerize:
+                    if (GameState != GameState.MonsterPhase)
+                    {
+                        message = "Mesmerize can only be used when you are fighting monsters. ";
+                        break;
+                    }
+                    message = _hero.ActivateLevelTwoUltimate();
+                    if (string.IsNullOrEmpty(message))
+                    {
+                        message = "You are preparing to Mesmerize monsters. Select up to two monsters to Mesmerize and transform to one potion. For example, say select goblin and skeleton. ";
+                        GameState = GameState.DiceSelectionForMesmerize;
+                    }
+
+                    break;
             }
             
             _lastResponseMessage = message;
@@ -1124,6 +1190,77 @@ if(!_dungeon.HasChest)
 
         }
 
+        public SkillResponse MesmerizeSelectDice(IntentRequest request)
+        {
+            var dice = _dungeon.DungeonDice;
+            int selectedCount = dice.Count(d => d.IsSelected && d.IsMonster);
+            if (selectedCount > 1)
+                return ResponseBuilder.Ask("You have already selected two monsters. Say Mesmerize to transform them to one potion, or clear dice selection to start over. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+            var validSlots = request.Intent.Slots.Where(s => s.Value.Value != null);
+            bool selectionApplied = false;
+            foreach (var item in validSlots)
+            {
+                if (selectedCount > 1)
+                    break;
+
+                string dieFace = item.Value.Value.ToString().ToLower();
+                var dieToSelect = dice.FirstOrDefault(d => d.Name == dieFace && !d.IsSelected && d.IsMonster);
+                if (dieToSelect != null)
+                {
+                    dieToSelect.IsSelected = true;
+                    selectedCount++;
+                    selectionApplied = true;
+                }
+            }
+
+            if (!selectionApplied)
+                return ResponseBuilder.Ask("Invalid monster selection. You can only select monsters that are present in the dungeon and are not already selected. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+            string message = "";
+            if (selectedCount == 1)
+                message = $"You selected {dice.First(d => d.IsSelected).Name}. You can select one more monster or say Mesmerize to complete your action. ";
+            else
+                message = $"You selected {dice.First(d => d.IsSelected).Name} and {dice.Last(d => d.IsSelected).Name}. Say Mesmerize to transform them to one potion. ";
+            _lastResponseMessage = message;
+            SaveData();
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+
+        }
+
+        public SkillResponse CharmMonsterSelectDice(IntentRequest request)
+        {
+            var dice = _dungeon.DungeonDice;
+            int selectedCount = dice.Count(d => d.IsSelected && d.IsMonster);
+            if (selectedCount > 0)
+                return ResponseBuilder.Ask("You have already selected a monster. Say Charm Monster to transform it to a potion, or clear dice selection to start over. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+            var validSlots = request.Intent.Slots.Where(s => s.Value.Value != null);
+            bool selectionApplied = false;
+            foreach (var item in validSlots)
+            {
+                if (selectedCount > 0)
+                    break;
+
+                string dieFace = item.Value.Value.ToString().ToLower();
+                var dieToSelect = dice.FirstOrDefault(d => d.Name == dieFace && !d.IsSelected && d.IsMonster);
+                if (dieToSelect != null)
+                {
+                    dieToSelect.IsSelected = true;
+                    selectedCount++;
+                    selectionApplied = true;
+                }
+            }
+
+            if (!selectionApplied)
+                return ResponseBuilder.Ask("Invalid monster selection. You can only select monsters that are present in the dungeon. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+            string message = "";
+            if (selectedCount == 1)
+                message = $"You selected {dice.First(d => d.IsSelected).Name}. Say Charm Monster to transform it to one potion. ";
+            
+            _lastResponseMessage = message;
+            SaveData();
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+
+        }
+
         public SkillResponse PerformCalculatedStrike()
         {
             if (GameState != GameState.DiceSelectionForCalculatedStrike)
@@ -1136,6 +1273,49 @@ if(!_dungeon.HasChest)
             var dice = _dungeon.DungeonDice;
             string message = monsterCount > 1 ? $"You performed a calculated strike and defeated {dice.First(d => d.IsSelected).Name} and {dice.Last(d => d.IsSelected).Name}. " : $"You performed a calculated strike and defeated {dice.First(d => d.IsSelected).Name}. ";
             dice.RemoveAll(d => d.IsSelected);
+            message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
+
+            _lastResponseMessage = message;
+            SaveData();
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+        }
+
+        public SkillResponse PerformMesmerize()
+        {
+            if (GameState != GameState.DiceSelectionForMesmerize)
+                return RepeatLastMessage();
+
+            int monsterCount = _dungeon.DungeonDice.Count(d => d.IsSelected);
+            if (monsterCount < 1)
+                return ResponseBuilder.Ask("You need to select up to two monsters to Mesmerize. Say select followed by a monster name. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+            // transform the selected monsters
+            var dice = _dungeon.DungeonDice;
+            string message = monsterCount > 1 ? $"You mesmerized {dice.First(d => d.IsSelected).Name} and {dice.Last(d => d.IsSelected).Name}, and transformed them to one potion. " : $"You mesmerized one {dice.First(d => d.IsSelected).Name} and transformed it to one potion. ";
+            dice.RemoveAll(d => d.IsSelected);
+            var potionDie = new DungeonDie();
+            potionDie.DungeonDieType = DungeonDieType.Potion;
+            _dungeon.DungeonDice.Add(potionDie);
+            message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
+
+            _lastResponseMessage = message;
+            SaveData();
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
+        }
+
+        public SkillResponse PerformCharmMonster()
+        {
+            if (GameState != GameState.DiceSelectionForCharmMonster)
+                return RepeatLastMessage();
+
+            int monsterCount = _dungeon.DungeonDice.Count(d => d.IsSelected);
+            if (monsterCount < 1)
+                return ResponseBuilder.Ask("You need to select a monster to charm it. Say select followed by a monster name. ", RepromptBuilder.Create(_lastResponseMessage), Session);
+            // transform the selected monster
+            var dice = _dungeon.DungeonDice;
+            var monster = dice.First(d => d.IsSelected);
+            string message = $"You charmed one {monster.Name} and transformed it to a potion. ";
+            monster.DungeonDieType = DungeonDieType.Potion;
+            monster.IsSelected = false;
             message += UpdatePhaseIfNeeded(_dungeon.DetermineDungeonPhase());
 
             _lastResponseMessage = message;
@@ -1174,6 +1354,10 @@ if(!_dungeon.HasChest)
                     break;
                 case HeroType.HalfGoblinChieftain:
                     if (ultimate == HeroUltimates.PleaForHelp || ultimate == HeroUltimates.PullRank)
+                        return string.Empty;
+                    break;
+                case HeroType.EnchantressBeguiler:
+                    if (ultimate == HeroUltimates.CharmMonster|| ultimate == HeroUltimates.Mesmerize)
                         return string.Empty;
                     break;
             }

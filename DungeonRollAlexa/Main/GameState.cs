@@ -14,6 +14,8 @@
         RevivingCompanions,
         StandardDiceSelection,
         DiceSelectionForCalculatedStrike,
+        DiceSelectionForCharmMonster,
+        DiceSelectionForMesmerize,
         KillAdditionalMonster,
     }
 }

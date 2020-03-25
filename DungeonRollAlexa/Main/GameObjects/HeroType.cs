@@ -18,6 +18,8 @@ namespace DungeonRollAlexa.Main.GameObjects
         CrusaderPaladin,
         [Description("Half-Goblin - Specialty: You may open Chests and quaff Potions at any time during the Monsters phase. The ultimate ability is Plea For Help which transforms a goblin into a thief that gets discarded when you complete a level. Turns into Chieftain when leveled up and the ultimate ability is replaced with Pull Rank which transforms two goblins to fighters that get discarded when you complete a level. ")]
         HalfGoblinChieftain,
+        [Description("Enchantress - Specialty: Scrolls may be transformed to any other companion. The ultimate ability is Charm Monster which transforms a monster into a potion. Turns into Beguiler when leveled up and the ultimate ability is replaced with Mesmerize which transforms two monsters into one potion. ")]
+        EnchantressBeguiler,
 
     }
 }   

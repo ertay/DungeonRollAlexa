@@ -190,6 +190,7 @@ namespace DungeonRollAlexa
                     response = _gameSession.UseTreasureItem(request);
                     break;
                 case "TransformCompanionIntent":
+                case "TransformScrollIntent":
                     response = _gameSession.TransformCompanion(request);
                     break;
                 case "SeekGloryIntent":
@@ -252,6 +253,18 @@ namespace DungeonRollAlexa
                     break;
                 case "PullRankIntent":
                     response = _gameSession.ActivateUltimate(HeroUltimates.PullRank, request);
+                    break;
+                case "CharmMonsterIntent":
+                    if (_gameSession.GameState != GameState.DiceSelectionForCharmMonster)
+                        response = _gameSession.ActivateUltimate(HeroUltimates.CharmMonster, request);
+                    else
+                        response = _gameSession.PerformCharmMonster();
+                    break;
+                case "MesmerizeIntent":
+                    if (_gameSession.GameState != GameState.DiceSelectionForMesmerize)
+                        response = _gameSession.ActivateUltimate(HeroUltimates.Mesmerize, request);
+                    else
+                        response = _gameSession.PerformMesmerize();
                     break;
             }
 

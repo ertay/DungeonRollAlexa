@@ -141,8 +141,8 @@ namespace DungeonRollAlexa
                 case "ChooseHeroIntent":
                     response = _gameSession.SelectHero(request);
                     break;
-                case "DetailedHeroSelectionIntent":
-                    response = _gameSession.DetailedHeroSelection();
+                case "HeroDetailsIntent":
+                    response = _gameSession.HeroDetailsAction(request);
                     break;
                 case "RulesIntent":
                     response = _gameSession.ReadRules();

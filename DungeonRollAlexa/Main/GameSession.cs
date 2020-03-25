@@ -67,12 +67,45 @@ namespace DungeonRollAlexa.Main
             
         }
 
-        public SkillResponse DetailedHeroSelection()
+        public SkillResponse HeroDetailsAction(IntentRequest request)
         {
+            if (GameState != GameState.BasicHeroSelection && GameState != GameState.DetailedHeroSelection)
+                return RepeatLastMessage("That is not a valid action. ");
+            string hero = request.Intent.Slots["SelectedHero"].Value;
+
+            switch (hero)
+            {
+                case "spellsword":
+                    _heroSelectorIndex = 0;
+                    break;
+                case "mercenary":
+                    _heroSelectorIndex = 1;
+                    break;
+                case "occultist":
+                    _heroSelectorIndex = 2;
+                    break;
+                case "knight":
+                    _heroSelectorIndex = 3;
+                    break;
+                case "minstrel":
+                    _heroSelectorIndex = 4;
+                    break;
+                case "crusader":
+                    _heroSelectorIndex = 5;
+                    break;
+                case "half goblin":
+                    _heroSelectorIndex = 6;
+                    break;
+                case "enchantress":
+                    _heroSelectorIndex = 7;
+                    break;
+                default:
+                    return RepeatLastMessage($"{hero} is not a valid hero. ");
+            }
+
             GameState = GameState.DetailedHeroSelection;
-            _heroSelectorIndex = 0;
             HeroType heroType = Utilities.GetHeroTypes()[_heroSelectorIndex];
-            string newGameMessage = "Okay, here is more details about the first hero. ";
+            string newGameMessage = "Okay, here is more details about ";
             string message = $"{heroType.GetDescription()}. Do you want to choose this hero? ";
             _lastResponseMessage = message;
             SaveData();
@@ -83,7 +116,7 @@ namespace DungeonRollAlexa.Main
         {
             GameState = GameState.BasicHeroSelection;
 
-            string message = "Alright. Here is a list of heroes to choose from: Spellsword, Mercenary, Occultist, Knight, Minstrel, Crusader, Half-Goblin, or Enchantress. Say a hero's name to begin. For detailed hero selection, say detailed hero selection. ";
+            string message = "Alright. Here is a list of heroes to choose from: Spellsword, Mercenary, Occultist, Knight, Minstrel, Crusader, Half-Goblin, or Enchantress. Say a hero's name to begin. To learn more about a specific hero, say hero details. ";
             _lastResponseMessage = message;
             SaveData();
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
@@ -212,22 +245,6 @@ namespace DungeonRollAlexa.Main
                 GameState = GameState.RegroupPhase;
             }
             return message;
-        }
-
-        public SkillResponse NextHero()
-        {
-            // user answered with No to the offered hero, present the next hero in the list
-            var heroList = Utilities.GetHeroTypes();
-            if(++_heroSelectorIndex >= heroList.Count)
-            {
-                // we showed all the heroes, return to first hero
-                _heroSelectorIndex = 0;
-            }
-            HeroType heroType = heroList[_heroSelectorIndex];
-            string message = $"Okay, here is another hero. {heroType.GetDescription()}. Do you want to choose this hero? ";
-            _lastResponseMessage = message;
-            SaveData();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(message), Session);
         }
 
         private string CreateParty()
@@ -1400,7 +1417,7 @@ if(!_dungeon.HasChest)
             switch (GameState)
             {
                 case GameState.DetailedHeroSelection:
-                response = NextHero(); 
+                response = BasicHeroSelection(); 
                     break;
                 case GameState.RandomHeroPrompt:
                     response = BasicHeroSelection();
@@ -1621,7 +1638,7 @@ if(!_dungeon.HasChest)
 
         public SkillResponse ChangeLog()
         {
-            string message = "Dungeon Roll Beta Version 4 Change log: Added Crusader, Half-Goblin, and Enchantress as new heroes. All heroes from the base game are now completed. Say new game to start a new game, say rules for the rules, say help if you need help. ";
+            string message = "Dungeon Roll Beta Version 4 Change log: Added Crusader, Half-Goblin, and Enchantress as new heroes. All heroes from the base game are now completed. Modified the approach you access hero details when choosing a hero. Say new game to start a new game, say rules for the rules, say help if you need help. ";
 
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(_lastResponseMessage), Session);
         }

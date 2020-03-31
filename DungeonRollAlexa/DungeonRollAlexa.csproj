@@ -8,6 +8,7 @@
   <ItemGroup>
     <PackageReference Include="Alexa.NET" Version="1.6.3" />
     <PackageReference Include="Alexa.NET.LocaleSpeech" Version="1.0.0" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.105.18" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="1.0.28" />
   </ItemGroup>
   <ItemGroup>

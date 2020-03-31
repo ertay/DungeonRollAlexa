@@ -38,6 +38,7 @@ namespace DungeonRollAlexa
             // setup game session
             _gameSession = new GameSession(skillRequest.Session);
 
+            await _gameSession.LoadProgressFromDb();
             // Setup language resources.
             var store = SetupLanguageResources();
             var locale = skillRequest.CreateLocale(store);
@@ -79,6 +80,7 @@ namespace DungeonRollAlexa
                 response = ResponseBuilder.Tell(ex.Message);
                 response.Response.ShouldEndSession = false;
             }
+            await _gameSession.SaveProgressToDb();
 
             return new OkObjectResult(response);
         }

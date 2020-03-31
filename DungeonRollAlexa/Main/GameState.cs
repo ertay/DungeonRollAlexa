@@ -3,6 +3,7 @@
     public enum GameState
     {
         MainMenu,
+        ContinuePrompt,
         RandomHeroPrompt,
         BasicHeroSelection,
         DetailedHeroSelection,

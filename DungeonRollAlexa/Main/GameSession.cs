@@ -1751,7 +1751,16 @@ if(!Dungeon.HasChest)
                     message = "Say yes to start a new game with a random hero. Say no to choose a hero. ";
                     break;
                 case GameState.BasicHeroSelection:
-                    message = "Say a hero's name to start a new game with that hero. Say detailed hero selection to learn more about each hero's abilities. ";
+                    message = "Say a hero's name to start a new game with that hero. Say hero details to learn more about a specific hero. ";
+                    break;
+                case GameState.ContinuePrompt:
+                    message = "Say yes to continue playing your last unfinished game. Say no to go to the main menu. ";
+                    break;
+                case GameState.DiceSelectionForCharmMonster:
+                    message = "You need to select a monster to complete your Charm Monster action. Say select followed by a monster's name. For example, say select goblin. After selecting a monster, say charm monster to complete your action. ";
+                    break;
+                case GameState.DiceSelectionForMesmerize:
+                    message = "You need to select up to two monsters to complete your Mesmerize action. Say select followed by a monster's name. For example, say select goblin and skeleton. After selecting one or two monsters, say Mesmerize to complete your action. ";
                     break;
             }
 
@@ -1767,7 +1776,7 @@ if(!Dungeon.HasChest)
 
         public SkillResponse ChangeLog()
         {
-            string message = "Dungeon Roll Beta Version 4 Change log: Added Crusader, Half-Goblin, and Enchantress as new heroes. All heroes from the base game are now completed. Modified the approach you access hero details when choosing a hero. Say new game to start a new game, say rules for the rules, say help if you need help. ";
+            string message = "Dungeon Roll Beta Version 5 Change log: You can now continue playing an unfinished game after quitting  the game. Say new game to start a new game, say rules for the rules, say help if you need help. ";
 
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }

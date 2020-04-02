@@ -156,23 +156,50 @@ namespace DungeonRollAlexa.Main.GameObjects
             // formatted string to describe the dungeon
             string message = "";
 
-            if(DungeonDice.Count == 1)
+            var groups = DungeonDice.GroupBy(g => g.Name).OrderByDescending(g => g.Count()).Select(g => new { Key = (g.Count() > 1) ? g.Key + "s" : g.Key, Count = g.Count() });
+            int dieCount = 0;
+            string dieName = "";
+
+            if (groups.Count() == 1)
             {
-                message = $"{DungeonDice[0].Name}";
-            }
-            else if (DungeonDice.Count == 2)
-            {
-                message = $"{DungeonDice[0].Name} and {DungeonDice[1].Name}";
-            }
-            else if (DungeonDice.Count > 2)
-            {
-                for (int i = 0; i < DungeonDice.Count; i++)
+                dieCount = groups.First().Count;
+                dieName = groups.First().Key;
+                if (dieCount > 1)
                 {
-                    message += (i == DungeonDice.Count - 1) ? $"and {DungeonDice[i].Name}" : $"{DungeonDice[i].Name}, ";
+                    //dieName += "s"; ;
+                }
+                message = $"{dieCount} {dieName}";
+            }
+            else if (groups.Count() == 2)
+            {
+                List<string> formattedGroups = new List<string>();
+                foreach (var item in groups)
+                {
+                    dieCount = item.Count;
+                    dieName = item.Key;
+                    if (dieCount > 1)
+                    {
+                        //dieName += "s"; ;
+                    }
+                    formattedGroups.Add($"{dieCount} {dieName}");
+                }
+                message = $"{formattedGroups[0]} and {formattedGroups[1]}";
+            }
+            else if (groups.Count() > 2)
+            {
+                for (int i = 0; i < groups.Count(); i++)
+                {
+                    dieCount = groups.ElementAt(i).Count;
+                    dieName = groups.ElementAt(i).Key;
+                    if (dieCount > 1)
+                    {
+                        //dieName += "s"; ;
+                    }
+                    message += (i == groups.Count() - 1) ? $"and {dieCount} {dieName}" : $"{dieCount} {dieName}, ";
                 }
             }
             else
-                message = "no monsters or loot in this level";
+                message = "no monsters or loot";
 
             return message;
         }

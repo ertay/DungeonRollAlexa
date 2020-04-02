@@ -22,6 +22,7 @@ namespace DungeonRollAlexa.Main.GameObjects
         DragonBait,
         [Description("Town Portal")]
         TownPortal
+
     }
 
     /// <summary>

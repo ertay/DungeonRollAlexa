@@ -71,9 +71,10 @@ namespace DungeonRollAlexa.Main.GameObjects
             {
                 PartyDie die = new PartyDie();
                 PartyDice.Add(die);
-                message += (i == partySize - 1) ? $"and {die.Companion}. " : $"{die.Companion}, ";
+                
 
             }
+            message += $"{GetPartyAsString()}. ";
             return message;
         }
 
@@ -260,23 +261,51 @@ namespace DungeonRollAlexa.Main.GameObjects
         public string GetPartyAsString()
         {
             string message = "";
-            if (PartyDice.Count == 1)
+
+            var groups = PartyDice.GroupBy(g => g.Name).OrderByDescending(g => g.Count()).Select(g => new { Key = g.Key, Count =  g.Count()});
+            int companionCount = 0;
+            string companionName = "";
+            
+            if (groups.Count() == 1)
             {
-                message = PartyDice[0].Name;
-            }
-            else if (PartyDice.Count == 2)
-            {
-                message = $"{PartyDice[0].Name} and {PartyDice[1].Name}";
-            }
-            else if (PartyDice.Count > 2)
-            {
-                for (int i = 0; i < PartyDice.Count; i++)
+                companionCount = groups.First().Count;
+                companionName = groups.First().Key;
+                if(companionCount > 1)
                 {
-                    message += (i == PartyDice.Count - 1) ? $"and {PartyDice[i].Name}" : $"{PartyDice[i].Name}, ";
+                    companionName = companionName == "thief" ? "thieves" : $"{companionName}s";
+                }
+                message = $"{companionCount} {companionName}";
+            }
+            else if (groups.Count() == 2)
+            {
+                List<string> formattedGroups = new List<string>();
+                foreach (var item in groups)
+                {
+                    companionCount = item.Count;
+                    companionName = item.Key;
+                    if (companionCount > 1)
+                    {
+                        companionName = companionName == "thief" ? "thieves" : $"{companionName}s";
+                    }
+                    formattedGroups.Add($"{companionCount} {companionName}");
+                }
+                message = $"{formattedGroups[0]} and {formattedGroups[1]}";
+            }
+            else if (groups.Count() > 2)
+            {
+                for (int i = 0; i < groups.Count(); i++)
+                {
+                    companionCount = groups.ElementAt(i).Count;
+                    companionName = groups.ElementAt(i).Key;
+                    if (companionCount > 1)
+                    {
+                        companionName = companionName == "thief" ? "thieves" : $"{companionName}s";
+                    }
+                    message += (i == groups.Count() - 1) ? $"and {companionCount} {companionName}" : $"{companionCount} {companionName}, ";
                 }
             }
             else
-                message = "You do not have any party dice";
+                message = "no companions";
 
             return message;
         }
@@ -346,8 +375,35 @@ namespace DungeonRollAlexa.Main.GameObjects
         {
             if (Inventory.Count < 1)
                 return "There are no items in your inventory. ";
-            string items = string.Join(", ", Inventory.Select(i => i.TreasureType.GetDescription()).ToList());
-            return $"Your inventory contains: {items}. ";
+
+            var groups = Inventory.GroupBy(g => g.TreasureType).OrderByDescending(g => g.Count()).Select(g => new { Key = g.Key, Count = g.Count()});
+            
+            string message = "Your inventory contains: ";
+
+            foreach (var item in groups)
+            {
+                string itemName = item.Key.GetDescription().ToLower(); ;
+                if(item.Count > 1)
+                {
+                    switch(itemName)
+                    {
+                        case "scepter of power":
+                            itemName = "scepters of power";
+                            break;
+                        case "thieves tools":
+                        case "dragon scales":
+                            break;
+                        case "ring of invisibility":
+                            itemName = "rings of invisibility";
+                            break;
+                        default:
+                            itemName += "s";
+                            break;
+                    }
+                }
+                message += $"{item.Count} {itemName}, ";
+            }
+            return message;
         }
 
         public virtual void ActivateSpecialty() { }

@@ -28,9 +28,10 @@
                     scrollCount++;
                 }
                 PartyDice.Add(die);
-                message += (i == partySize - 1) ? $"and {die.Companion}. " : $"{die.Companion}, ";
+                
 
             }
+            message += $"{GetPartyAsString()}. ";
 
             if (scrollCount == 1)
                 message += "One scroll was transformed to a champion. ";

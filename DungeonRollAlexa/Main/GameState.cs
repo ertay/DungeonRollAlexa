@@ -4,6 +4,7 @@
     {
         MainMenu,
         ContinuePrompt,
+        FleePrompt,
         RandomHeroPrompt,
         BasicHeroSelection,
         DetailedHeroSelection,

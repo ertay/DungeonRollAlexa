@@ -592,14 +592,19 @@ if(!Dungeon.HasChest)
             return message;
         }
 
+        public SkillResponse ConfirmFleeDungeon()
+        {
+            if (Hero == null || !Hero.CanFlee(GameState))
+                return RepeatLastMessage("Flee is not a valid command at the moment. ");
+            GameState = GameState.FleePrompt;
+            string message = "Are you sure you want to flee the dungeon and complete this delve without earning any experience points? ";
+            RepromptMessage = message;
+            SaveData();
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+        }
+
         public SkillResponse FleeDungeon()
         {
-            if (GameState == GameState.RegroupPhase)
-                return RetireDelve();
-
-            if (GameState == GameState.MainMenu || GameState == GameState.PartyFormation)
-                return RepeatLastMessage("That is not a valid action. ");
-
             string message = $"You fled and concluded your delve on level {Dungeon.Level} without earning any experience points. ";
 
             bool gameOver = false;
@@ -1452,6 +1457,9 @@ if(!Dungeon.HasChest)
                 case GameState.RandomHeroPrompt:
                     response = SelectRandomHero();
                     break;
+                case GameState.FleePrompt:
+                    response = FleeDungeon();
+                    break;
                 case GameState.ContinuePrompt:
                     response = ContinuePreviousGame();
                     break;
@@ -1478,6 +1486,12 @@ if(!Dungeon.HasChest)
                     break;
                 case GameState.RandomHeroPrompt:
                     response = BasicHeroSelection();
+                    break;
+                case GameState.FleePrompt:
+                    string message = UpdatePhaseIfNeeded(Dungeon.DetermineDungeonPhase());
+                    RepromptMessage = message;
+                    SaveData();
+                    response = ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
                     break;
                 case GameState.ContinuePrompt:
                     IsGameInProgress = false;
@@ -1761,6 +1775,9 @@ if(!Dungeon.HasChest)
                     break;
                 case GameState.DiceSelectionForMesmerize:
                     message = "You need to select up to two monsters to complete your Mesmerize action. Say select followed by a monster's name. For example, say select goblin and skeleton. After selecting one or two monsters, say Mesmerize to complete your action. ";
+                    break;
+                case GameState.FleePrompt:
+                    message = "Say yes to flee the dungeon without earning any experience points. Say no to continue the delve. ";
                     break;
             }
 

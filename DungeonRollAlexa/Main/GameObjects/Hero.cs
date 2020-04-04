@@ -439,5 +439,21 @@ namespace DungeonRollAlexa.Main.GameObjects
         {
             return false;
         }
+
+        public bool CanFlee(GameState gameState)
+        {
+            switch (gameState)
+            {
+                case GameState.MonsterPhase:
+                case GameState.LootPhase:
+
+                case GameState.DragonPhase:
+                    return true;
+                    break;
+                default:
+                    return false;
+                    break;
+            }
+        }
     }
 }   

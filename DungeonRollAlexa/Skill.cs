@@ -202,7 +202,7 @@ namespace DungeonRollAlexa
                     response = _gameSession.GoToNextPhase();
                     break;
                 case "FleeIntent":
-                    response = _gameSession.FleeDungeon();
+                    response = _gameSession.ConfirmFleeDungeon();
                     break;
                 case "RetireIntent":
                     response = _gameSession.RetireDelve();

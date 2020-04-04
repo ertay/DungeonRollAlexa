@@ -35,8 +35,10 @@ namespace DungeonRollAlexa
                 return new BadRequestResult();
             }
 
+            bool isFirstRequest = skillRequest.Session.Attributes == null ? true : false;
             // setup game session
             _gameSession = new GameSession(skillRequest.Session);
+            
 
             await _gameSession.LoadProgressFromDb();
             // Setup language resources.
@@ -48,7 +50,7 @@ namespace DungeonRollAlexa
 
             try
             {
-                if (request is LaunchRequest launchRequest)
+                if (request is LaunchRequest launchRequest || isFirstRequest)
                 {
                     log.LogInformation("Session started");
 

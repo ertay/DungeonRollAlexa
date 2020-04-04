@@ -87,7 +87,7 @@ namespace DungeonRollAlexa.Main
             }
             else
             {
-                message = "Welcome to Dungeon Roll Beta Version 5. To begin, say new game. To learn the rules, say rules. Say help at any point during the game if you need help. Say what's new to get information about this version. ";
+                message = "Welcome to Dungeon Roll Beta Version 6. To begin, say new game. To learn the rules, say rules. Say help at any point during the game if you need help. Say what's new to get information about this version. ";
                 GameState = GameState.MainMenu;
             }
             RepromptMessage = message;
@@ -1793,7 +1793,7 @@ if(!Dungeon.HasChest)
 
         public SkillResponse ChangeLog()
         {
-            string message = "Dungeon Roll Beta Version 5 Change log: You can now continue playing an unfinished game after quitting  the game. Say new game to start a new game, say rules for the rules, say help if you need help. ";
+            string message = "Dungeon Roll Beta Version 6 Change log: Minor bug fixes and improvements. Say new game to start a new game, say rules for the rules, say help if you need help. ";
 
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }

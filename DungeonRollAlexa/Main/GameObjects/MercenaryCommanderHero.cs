@@ -5,7 +5,7 @@ namespace DungeonRollAlexa.Main.GameObjects
     public class MercenaryCommanderHero : Hero
     {
 
-        public override string PartyFormationActionMessage => "You can reroll any of your party dice before continuing. For example, say select fighter, thief, to select the dice. Say next phase to start the delve with your current party. ";
+        public override string PartyFormationActionMessage => "You can reroll any of your party dice before continuing. For example, say select fighter, thief, to select the dice. Say skip to start the delve with your current party. ";
 
         public override string SpecialtyInformation => IsLeveledUp? "Your fighters defeat an additional monster of any type. " : "When forming the party, you may reroll any number of party dice. ";
 

@@ -282,13 +282,17 @@ namespace DungeonRollAlexa.Main
             }
             else if (Dungeon.HasMonsters)
             {
-                message += "You are now in the monster phase. You need to defeat the monster to continue. ";
+                string monster = Dungeon.DungeonDice.First(d => d.IsMonster).Name;
+                message += $"You are in the monster phase. Attack the {monster} to continue. ";
                 GameState = GameState.MonsterPhase;
             }
             else if (Dungeon.HasLoot)
             {
                 // no monsters we go to loot phase
-                message += "You are in the loot phase. If you want to ignore the loot and continue, say next phase. ";
+                if(Dungeon.HasChest)
+                    message += "You are in the loot phase. You can say open chest, or say skip to ignore it and continue. ";
+                else
+                    message += "You are in the loot phase. You can quaff potions, or say skip to ignore the loot and continue. ";
                 GameState = GameState.LootPhase;
             }
             else
@@ -320,7 +324,7 @@ namespace DungeonRollAlexa.Main
                 if (companion == "scroll")
                     message = "You throw a scroll at the monster but nothing happens. Uh oh! ";
                 else
-                    message = $"{companion} is not in your party. You need to attack with a companion present in your party. ";
+                    message = $"{companion} is not in your party. You need to attack with a companion present in your party. Your party has {Hero.GetPartyAsString()}. ";
                 return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
             }
             Enum.TryParse(companion.FirstCharToUpper(), out CompanionType companionType);
@@ -400,7 +404,7 @@ namespace DungeonRollAlexa.Main
             string companion = request.Intent.Slots["SelectedCompanion"].Value;
             if (!Hero.IsCompanionInParty(companion, true))
             {
-                message = $"{companion} is not in your party. You can quaff potions with a companion present in your party. ";
+                message = $"{companion} is not in your party. You can quaff potions with a companion present in your party. Your party has {Hero.GetPartyAsString()}. ";
                 return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
             }
             Enum.TryParse(companion.FirstCharToUpper(), out CompanionType companionType);
@@ -472,14 +476,14 @@ namespace DungeonRollAlexa.Main
                 if (companion == "scroll")
                     message = "You cannot open a chest with a scroll. Use a different companion. ";
                 else
-                    message = $"{companion} is not in your party. You need to open chests with a companion present in your party. ";
+                    message = $"{companion} is not in your party. You need to open chests with a companion present in your party. Your party has {Hero.GetPartyAsString()}. ";
                 return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
             }
             // we got a valid companion proceed to check if there's a valid chest
 if(!Dungeon.HasChest)
             {
                 // no chest found
-                message = "There are no chests to open. ";
+                message = $"There are no chests to open. The dungeon has {Dungeon.GetDungeonDiceAsString()}. ";
                 return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
             }
 
@@ -648,15 +652,15 @@ if(!Dungeon.HasChest)
             {
                 case GameState.MonsterPhase:
                     GameState = newGameState;
-                    return "You are now in the monster phase. Defeat all monsters to continue. ";
+                    return $"You are in the monster phase. The dungeon has {Dungeon.GetDungeonDiceAsString()}. Attack the monsters to continue. ";
                     break;
                 case GameState.LootPhase:
                     GameState = newGameState;
-                    return "You are now in the loot phase. In this phase you can use party dice to open chests or quaff potions. Say next phase if you want to ignore some of  the loot and continue. ";
+                    return $"You are in the loot phase. The dungeon has {Dungeon.GetDungeonDiceAsString()}. In this phase you can use party dice to open chests or quaff potions. Say skip to ignore some of  the loot and continue. ";
                     break;
                 case GameState.DragonPhase:
                     GameState = newGameState;
-                    return $"You are now facing a dragon. You need to select {Hero.DefeatDragonCompanionCount} companions of different types to defeat the dragon and continue. ";
+                    return $"You are now facing a dragon. You need to select {Hero.DefeatDragonCompanionCount} companions of different types to defeat the dragon and continue. Your party consists of: {Hero.GetPartyAsString()}. Use the select command to start selection. ";
                     break;
                 case GameState.RegroupPhase:
                     if (Dungeon.Level == 10)
@@ -1341,7 +1345,7 @@ if(!Dungeon.HasChest)
         public SkillResponse PerformCalculatedStrike()
         {
             if (GameState != GameState.DiceSelectionForCalculatedStrike)
-                return RepeatLastMessage();
+                return RepeatLastMessage("You cannot perform a calculated strike at the moment. ");
 
             int monsterCount = Dungeon.DungeonDice.Count(d =>d.IsSelected);
             if (monsterCount < 1)
@@ -1360,7 +1364,7 @@ if(!Dungeon.HasChest)
         public SkillResponse PerformMesmerize()
         {
             if (GameState != GameState.DiceSelectionForMesmerize)
-                return RepeatLastMessage();
+                return RepeatLastMessage("You cannot mesmerize at the moment. ");
 
             int monsterCount = Dungeon.DungeonDice.Count(d => d.IsSelected);
             if (monsterCount < 1)
@@ -1382,7 +1386,7 @@ if(!Dungeon.HasChest)
         public SkillResponse PerformCharmMonster()
         {
             if (GameState != GameState.DiceSelectionForCharmMonster)
-                return RepeatLastMessage();
+                return RepeatLastMessage("You cannot charm a monster at the moment. ");
 
             int monsterCount = Dungeon.DungeonDice.Count(d => d.IsSelected);
             if (monsterCount < 1)
@@ -1509,7 +1513,7 @@ if(!Dungeon.HasChest)
         public SkillResponse GetDungeonStatus()
         {
             if (GameState == GameState.MainMenu)
-                return RepeatLastMessage();
+                return RepeatLastMessage("You can check the dungeon status when you start a new game. ");
             string message = Dungeon.GetDungeonStatus();
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
@@ -1517,7 +1521,7 @@ if(!Dungeon.HasChest)
         public SkillResponse GetPartyStatus()
         {
             if (GameState == GameState.MainMenu)
-                return RepeatLastMessage();
+                return RepeatLastMessage("You can check party status when you start a new game. ");
             string message = Hero.GetPartyStatus();
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
@@ -1525,7 +1529,7 @@ if(!Dungeon.HasChest)
         public SkillResponse GetInventoryStatus()
         {
             if (GameState == GameState.MainMenu)
-                return RepeatLastMessage();
+                return RepeatLastMessage("You can check your ivnentory when you start a new game. ");
             string message = Hero.GetInventoryStatus();
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
@@ -1745,7 +1749,7 @@ if(!Dungeon.HasChest)
                     message = "You are in the monster phase and you need to attack monsters to defeat them. Valid commands in this phase are the following: 1. Attack - for example say fighter attack goblin. A single fighter can defeat all goblins, a single mage can defeat all oozes, a single cleric defeats all skeletons, and a champion defeats all monsters of the selected type. 2. Use scroll - scrolls let you reroll any party or dungeon dice. 3. Use item - use a treasure item from your inventory. 4. Flee - if you cannot pass this phase you need to flee and end the delve. 5. Specialty - get information about how you can use your hero specialty. 6. Ultimate ability - get information about how you can use your ultimate ability. 7. Party status - get information about your party. 8. Dungeon status - get information about the current state of the dungeon. 9. Inventory - get information about your inventory. 10. Item information - get information about a specific treasure item. ";
                     break;
                 case GameState.LootPhase:
-                    message = "In the loot phase you can open chests to receive treasure items, or quaff potions to revive party members from the graveyard. Valid commands in this phase are the following: 1. open chest - a thief or champion can open all chests at once, while other companions can open a single chest when used. 2. Quaff potion - any party member can be used to quaff as many potions that are available. Scrolls can also quaff potions. 3. Use item - use a treasure item from your inventory 4. Next Phase - ignore  remaining loot and continue to  next phase. 5. Specialty - get information about how you can use your hero specialty. 6. Ultimate ability - get information about how you can use your ultimate ability. 7. Party status - get information about your party. 8. Dungeon status - get information about the current state of the dungeon. 9. Inventory - get information about your inventory. 10. Item information - get information about a specific treasure item. ";
+                    message = "In the loot phase you can open chests to receive treasure items, or quaff potions to revive party members from the graveyard. Valid commands in this phase are the following: 1. open chest - a thief or champion can open all chests at once, while other companions can open a single chest when used. 2. Quaff potion - any party member can be used to quaff as many potions that are available. Scrolls can also quaff potions. 3. Use item - use a treasure item from your inventory 4. skip - ignore  remaining loot and continue to  next phase. 5. Specialty - get information about how you can use your hero specialty. 6. Ultimate ability - get information about how you can use your ultimate ability. 7. Party status - get information about your party. 8. Dungeon status - get information about the current state of the dungeon. 9. Inventory - get information about your inventory. 10. Item information - get information about a specific treasure item. ";
                     break;
                 case GameState.DragonPhase:
                     message = "In the dragon phase you need to select different companion types to defeat the dragon. Valid commands in this phase are the following: 1. Select - For example, say select fighter, mage, cleric. 2. Clear dice selection - clear dice selection to start over 3. Defeat dragon - defeat dragon using the selected dice. 4. Use item - use a treasure item from your inventory 5. Flee - if you cannot pass this phase you need to flee and end the delve. 6. Specialty - get information about how you can use your hero specialty. 7. Ultimate ability - get information about how you can use your ultimate ability. 8. Party status - get information about your party. 9. Dungeon status - get information about the current state of the dungeon. 10. Inventory - get information about your inventory. 11. Item information - get information about a specific treasure item. ";
@@ -1834,7 +1838,7 @@ if(!Dungeon.HasChest)
 
         public SkillResponse ChangeLog()
         {
-            string message = "Dungeon Roll Beta Version 7 Change log: Added detailed rules to teach new players how to play. Say new game to start a new game, say rules for the rules, say help if you need help. ";
+            string message = "Dungeon Roll Beta Version 7 Change log: Added detailed rules to teach new players how to play. Minor changes to descriptions. Say new game to start a new game, say rules for the rules, say help if you need help. ";
 
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }

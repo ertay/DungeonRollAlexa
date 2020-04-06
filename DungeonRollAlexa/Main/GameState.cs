@@ -19,5 +19,6 @@
         DiceSelectionForCharmMonster,
         DiceSelectionForMesmerize,
         KillAdditionalMonster,
+        Rules,
     }
 }

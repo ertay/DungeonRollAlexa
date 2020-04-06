@@ -51,6 +51,7 @@ namespace DungeonRollAlexa.Main
         public Hero Hero { get; set; }
         public Dungeon Dungeon { get; set; }
         public int HeroSelectorIndex { get; set; }
+        public int RuleSelector { get; set; }
         public bool IsGameInProgress { get; set; }
 
         public GameSession() { }
@@ -87,7 +88,7 @@ namespace DungeonRollAlexa.Main
             }
             else
             {
-                message = "Welcome to Dungeon Roll Beta Version 6. To begin, say new game. To learn the rules, say rules. Say help at any point during the game if you need help. Say what's new to get information about this version. ";
+                message = "Welcome to Dungeon Roll Beta Version 7. To begin, say new game. To learn how to play, say rules. Say help at any point during the game if you need help. Say what's new to get information about this version. ";
                 GameState = GameState.MainMenu;
             }
             RepromptMessage = message;
@@ -1546,6 +1547,7 @@ if(!Dungeon.HasChest)
             attributes.Add("gameState", (int)GameState);
             attributes.Add("lastResponseMessage", RepromptMessage);
             attributes.Add("heroSelectorIndex", HeroSelectorIndex);
+            attributes.Add("RuleSelector", RuleSelector);
             if (Hero != null)
             {
                 var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
@@ -1580,6 +1582,7 @@ if(!Dungeon.HasChest)
             GameState = (GameState)Utilities.ParseInt(attributes["gameState"]);
             RepromptMessage = attributes["lastResponseMessage"].ToString();
             HeroSelectorIndex= Utilities.ParseInt(attributes["heroSelectorIndex"]);
+            RuleSelector = Utilities.ParseInt(attributes["RuleSelector"]);
 
             var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
             Hero = JsonConvert.DeserializeObject<Hero>(attributes["hero"].ToString(), settings);
@@ -1640,6 +1643,7 @@ if(!Dungeon.HasChest)
                 RepromptMessage = gameSession.RepromptMessage;
                 PreviousRepromptMessage = gameSession.PreviousRepromptMessage;
                 HeroSelectorIndex = gameSession.HeroSelectorIndex;
+                RuleSelector = gameSession.RuleSelector;
                 IsGameInProgress = gameSession.IsGameInProgress;
                 GameState = gameSession.GameState;
                 LastGameState = gameSession.LastGameState;
@@ -1732,7 +1736,7 @@ if(!Dungeon.HasChest)
                     message = "You are in the main menu. To start a new game, say new game. To listen to the game rules, say rules. Say help at any point in the game to learn about valid commands. ";
                     break;
                 case GameState.DetailedHeroSelection:
-                    message = "You are in the hero selection phase. If you want to pick the hero that is presented, say yes. If you want to go to the next hero, say no. ";
+                    message = "You are in the hero selection phase. If you want to pick the hero that is presented, say yes. Otherwise, say no. ";
                     break;
                 case GameState.PartyFormation:
                     message = "You are in the party formation phase and about to start a new dungeon delve. Your hero can select dice in your party to reroll before you start. Say select followed by the party die name to select dice. Say party status to get information about your party. ";
@@ -1779,21 +1783,58 @@ if(!Dungeon.HasChest)
                 case GameState.FleePrompt:
                     message = "Say yes to flee the dungeon without earning any experience points. Say no to continue the delve. ";
                     break;
+                case GameState.Rules:
+                    message = "Say next to continue to the next rule. Say back to listen to the previous rule. Say repeat to repeat the current rule. Say new game to start a new game. ";
+                    break;
             }
 
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
+        public SkillResponse ResolveNextIntent()
+        {
+            if (GameState != GameState.Rules)
+                return RepeatLastMessage("I'm sorry, that is not a valid command. ");
+            if (++RuleSelector > Utilities.NUMBER_OF_RULES)
+            {
+                RuleSelector = Utilities.NUMBER_OF_RULES;
+                return ResponseBuilder.Ask("You completed the rules, say new game to start a new game. ", RepromptBuilder.Create(Utilities.GetRule(RuleSelector)), Session);
+            }
+            string message = Utilities.GetRule(RuleSelector);
+            RepromptMessage = message;
+            SaveData();
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(message), Session);
+                
+        }
+
+        public SkillResponse ResolvePreviousIntent()
+        {
+            if (GameState != GameState.Rules)
+                return RepeatLastMessage("I'm sorry, that is not a valid command. ");
+            if (--RuleSelector < 0)
+            {
+                RuleSelector = 0;
+                return ResponseBuilder.Ask("You cannot go back. Say next to continue. ", RepromptBuilder.Create(Utilities.GetRule(RuleSelector)), Session);
+            }
+            string message = Utilities.GetRule(RuleSelector);
+            RepromptMessage = message;
+            SaveData();
+            return ResponseBuilder.Ask(message, RepromptBuilder.Create(message), Session);
+        }
+
         public SkillResponse ReadRules()
         {
-            string rules = "The Dungeon lies before you; you’ve assembled your party of hearty adventurers and have a few tricks up your sleeve. How far will you go to seek glory and fame? Will you risk losing everything? In Dungeon Roll your goal is to collect the most experience points by defeating monsters, battling the dragon, and amassing treasure. You select a Hero avatar, such as a Mercenary, Half-Goblin, or Enchantress, which provides you with unique powers. You assemble your party by rolling seven Party Dice, while Alexa, that would be me,  serves as the Dungeon Lord and rolls a number of Dungeon Dice based on how far you have progressed through the dungeon. You use Champion, Fighter, Cleric, Mage, Thief, and Scroll faces on the Party Dice to defeat monsters such as oozes and skeletons, to claim treasure inside chests, and to revive downed companions with potions. All this fighting in the dungeon is certain to attract the attention of the boss: The Dragon! When three or more Dragon faces appear on the Dungeon Dice, the Adventurer must battle the Dragon. Defeating the dragon is a team effort, requiring three different companion types. After three rounds, you add up your experience points and retire to the inn to celebrate your exploits and to plan your next foray into the next deadly dungeon! You can say help at any point during the game to get information about valid commands. Say new game to start a new game. ";
-
+            IsGameInProgress = false;
+            string rules = "The Dungeon lies before you; you’ve assembled your party of hearty adventurers and have a few tricks up your sleeve. How far will you go to seek glory and fame? Will you risk losing everything? In Dungeon Roll your goal is to collect the most experience points by defeating monsters, battling the dragon, and amassing treasure. You select a Hero avatar, such as a Mercenary, Half-Goblin, or Enchantress, which provides you with unique powers. You assemble your party by rolling seven Party Dice, while Alexa, that would be me,  serves as the Dungeon Lord and rolls a number of Dungeon Dice based on how far you have progressed through the dungeon. You use Champion, Fighter, Cleric, Mage, Thief, and Scroll faces on the Party Dice to defeat monsters such as oozes and skeletons, to claim treasure inside chests, and to revive downed companions with potions. All this fighting in the dungeon is certain to attract the attention of the boss: The Dragon! When three or more Dragon faces appear on the Dungeon Dice, the Adventurer must battle the Dragon. Defeating the dragon is a team effort, requiring three different companion types. After three rounds, you add up your experience points and retire to the inn to celebrate your exploits and to plan your next foray into the next deadly dungeon! You can say help at any point during the game to get information about valid commands. Say next to learn how to play the game. ";
+            RepromptMessage = "Say next to continue and learn how to play the game. Say new game to start a new game. ";
+            RuleSelector = -1;
+            GameState = GameState.Rules;
             return ResponseBuilder.Ask(rules, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         public SkillResponse ChangeLog()
         {
-            string message = "Dungeon Roll Beta Version 6 Change log: Minor bug fixes and improvements. Say new game to start a new game, say rules for the rules, say help if you need help. ";
+            string message = "Dungeon Roll Beta Version 7 Change log: Added detailed rules to teach new players how to play. Say new game to start a new game, say rules for the rules, say help if you need help. ";
 
             return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }

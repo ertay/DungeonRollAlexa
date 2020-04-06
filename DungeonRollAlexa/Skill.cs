@@ -99,6 +99,12 @@ namespace DungeonRollAlexa
                 case BuiltInIntent.Repeat:
                     response = _gameSession.RepeatLastMessage();
                     break;
+                case BuiltInIntent.Next:
+                    response = _gameSession.ResolveNextIntent();
+                    break;
+                case BuiltInIntent.Previous:
+                    response = _gameSession.ResolvePreviousIntent();
+                    break;
                 case BuiltInIntent.Yes:
                     response = _gameSession.ResolveYesIntent();
                     break;

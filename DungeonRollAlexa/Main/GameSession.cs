@@ -88,13 +88,13 @@ namespace DungeonRollAlexa.Main
             }
             else
             {
-                message = "Welcome to Dungeon Roll Beta Version 7. To begin, say new game. To learn how to play, say rules. Say help at any point during the game if you need help. Say what's new to get information about this version. ";
+                message = $"Welcome to Dungeon Roll Beta Version 8. To begin, say new game. To learn how to play, say rules. Say help at any point during the game if you need help. Say what's new to get information about this version. ";
                 GameState = GameState.MainMenu;
             }
             RepromptMessage = message;
             SaveData();
-
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         public SkillResponse ContinuePreviousGame()
@@ -103,7 +103,7 @@ namespace DungeonRollAlexa.Main
             GameState = LastGameState;
             RepromptMessage = PreviousRepromptMessage;
             SaveData();
-            return ResponseBuilder.Ask(RepromptMessage, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(RepromptMessage, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         public SkillResponse SetupNewGame()
@@ -114,7 +114,7 @@ namespace DungeonRollAlexa.Main
             string message = "Do you want to play with a random hero? ";
             RepromptMessage = message;
             SaveData();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
             
         }
 
@@ -160,7 +160,7 @@ namespace DungeonRollAlexa.Main
             string message = $"{heroType.GetDescription()}. Do you want to choose this hero? ";
             RepromptMessage = message;
             SaveData();
-            return ResponseBuilder.Ask(newGameMessage + message, RepromptBuilder.Create(message), Session);
+            return ResponseCreator.Ask(newGameMessage + message, RepromptBuilder.Create(message), Session);
         }
 
         public SkillResponse BasicHeroSelection()
@@ -170,7 +170,7 @@ namespace DungeonRollAlexa.Main
             string message = "Alright. Here is a list of heroes to choose from: Spellsword, Mercenary, Occultist, Knight, Minstrel, Crusader, Half-Goblin, or Enchantress. Say a hero's name to begin. To learn more about a specific hero, say hero details. ";
             RepromptMessage = message;
             SaveData();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         public SkillResponse SelectRandomHero()
@@ -265,7 +265,7 @@ namespace DungeonRollAlexa.Main
             string message = InitializeDungeonDelve();
             RepromptMessage = message;
             SaveData();
-            return ResponseBuilder.Ask(heroMessage + message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(heroMessage + message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         private string InitializeDungeonDelve()
@@ -325,7 +325,7 @@ namespace DungeonRollAlexa.Main
                     message = "You throw a scroll at the monster but nothing happens. Uh oh! ";
                 else
                     message = $"{companion} is not in your party. You need to attack with a companion present in your party. Your party has {Hero.GetPartyAsString()}. ";
-                return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
             }
             Enum.TryParse(companion.FirstCharToUpper(), out CompanionType companionType);
             // we got a valid companion let's check the monster
@@ -334,7 +334,7 @@ namespace DungeonRollAlexa.Main
             {
                 // monster is not present in dungeon
                 message = $"{monster} is not a valid target to attack. ";
-                return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
             }
 
             
@@ -355,7 +355,7 @@ namespace DungeonRollAlexa.Main
             }
             RepromptMessage = message;
             SaveData();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
             
         }
 
@@ -369,7 +369,7 @@ namespace DungeonRollAlexa.Main
             {
                 // monster is not present in dungeon
                 message = $"{monster} is not a valid target to defeat. Try saying defeat additional monster again and provide a different monster name. If you want to skip this ability, say skip. ";
-                return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
             }
 
             // valid additional monster selected let's kill it
@@ -382,7 +382,7 @@ namespace DungeonRollAlexa.Main
             message += UpdatePhaseIfNeeded(Dungeon.DetermineDungeonPhase());
             RepromptMessage = message;
             SaveData();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         public SkillResponse DrinkPotions(IntentRequest request)
@@ -392,10 +392,10 @@ namespace DungeonRollAlexa.Main
                 if (Hero != null && Hero.HeroType == HeroType.HalfGoblinChieftain)
                 {
                     if (GameState != GameState.MonsterPhase)
-                        return ResponseBuilder.Ask("Potions can only be quaffed during the monster or loot phase. ", RepromptBuilder.Create(RepromptMessage), Session);
+                        return ResponseCreator.Ask("Potions can only be quaffed during the monster or loot phase. ", RepromptBuilder.Create(RepromptMessage), Session);
                 }
                 else
-                    return ResponseBuilder.Ask("Potions can only be quaffed during the loot phase. ", RepromptBuilder.Create(RepromptMessage), Session);
+                    return ResponseCreator.Ask("Potions can only be quaffed during the loot phase. ", RepromptBuilder.Create(RepromptMessage), Session);
             }
                 
 
@@ -405,7 +405,7 @@ namespace DungeonRollAlexa.Main
             if (!Hero.IsCompanionInParty(companion, true))
             {
                 message = $"{companion} is not in your party. You can quaff potions with a companion present in your party. Your party has {Hero.GetPartyAsString()}. ";
-                return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
             }
             Enum.TryParse(companion.FirstCharToUpper(), out CompanionType companionType);
             // we have valid companion, let's check number of potions
@@ -417,7 +417,7 @@ namespace DungeonRollAlexa.Main
             if (!string.IsNullOrEmpty(message))
             {
                 // validation failed, send the error message to user
-                return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
             }
 
             // we have valid number and companion, save the revive counter and put the companion in the graveyard
@@ -429,7 +429,7 @@ namespace DungeonRollAlexa.Main
             RepromptMessage = message;
             SaveData();
 
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
 
         }
 
@@ -452,7 +452,7 @@ namespace DungeonRollAlexa.Main
             RepromptMessage = message;
             SaveData();
 
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         public SkillResponse OpenChestAction(IntentRequest request)
@@ -462,10 +462,10 @@ namespace DungeonRollAlexa.Main
                 if (Hero != null && Hero.HeroType == HeroType.HalfGoblinChieftain)
                 {
                     if (GameState != GameState.MonsterPhase)
-                        return ResponseBuilder.Ask("Chests can only be opened during the monster or loot phase. ", RepromptBuilder.Create(RepromptMessage), Session);
+                        return ResponseCreator.Ask("Chests can only be opened during the monster or loot phase. ", RepromptBuilder.Create(RepromptMessage), Session);
                 }
                 else
-                    return ResponseBuilder.Ask("Chests can only be opened during the loot phase. ", RepromptBuilder.Create(RepromptMessage), Session);
+                    return ResponseCreator.Ask("Chests can only be opened during the loot phase. ", RepromptBuilder.Create(RepromptMessage), Session);
             }
                 
             // user wants to open chest
@@ -477,14 +477,14 @@ namespace DungeonRollAlexa.Main
                     message = "You cannot open a chest with a scroll. Use a different companion. ";
                 else
                     message = $"{companion} is not in your party. You need to open chests with a companion present in your party. Your party has {Hero.GetPartyAsString()}. ";
-                return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
             }
             // we got a valid companion proceed to check if there's a valid chest
 if(!Dungeon.HasChest)
             {
                 // no chest found
                 message = $"There are no chests to open. The dungeon has {Dungeon.GetDungeonDiceAsString()}. ";
-                return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
             }
 
             // chest available let's open
@@ -508,7 +508,7 @@ if(!Dungeon.HasChest)
 
             RepromptMessage = message;
             SaveData();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         public SkillResponse GoToNextPhase()
@@ -540,7 +540,7 @@ if(!Dungeon.HasChest)
                 message = "You cannot skip this phase. ";
             // TODO: Use a switch statement to give helpful messages to the player when they try to skip an unskippable phase
 
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         public SkillResponse RetireDelve()
@@ -565,7 +565,7 @@ if(!Dungeon.HasChest)
                 message += InitializeDungeonDelve();
             RepromptMessage = message;
             SaveData();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         private string CalculateFinalScore()
@@ -592,7 +592,7 @@ if(!Dungeon.HasChest)
             else
                 rank = "Hero of Ages";
 
-            message = $"Your final score is {score}. Congratulations, you are now known as {rank}! To start a new game, say new game. ";
+            message = $"Your final score is {score}. <amazon:emotion name=\"excited\" intensity=\"medium\">Congratulations, you are now known as {rank}! To start a new game, say new game.</amazon:emotion> ";
             
             return message;
         }
@@ -605,12 +605,12 @@ if(!Dungeon.HasChest)
             string message = "Are you sure you want to flee the dungeon and complete this delve without earning any experience points? ";
             RepromptMessage = message;
             SaveData();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         public SkillResponse FleeDungeon()
         {
-            string message = $"You fled and concluded your delve on level {Dungeon.Level} without earning any experience points. ";
+            string message = $"<amazon:emotion name=\"disappointed\" intensity=\"high\">You fled and concluded your delve on level {Dungeon.Level} without earning any experience points.</amazon:emotion> ";
 
             bool gameOver = false;
             if (Dungeon.NumberOfDelves > 2)
@@ -625,7 +625,7 @@ if(!Dungeon.HasChest)
                 message += InitializeDungeonDelve();
             RepromptMessage = message;
             SaveData();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         public SkillResponse SeekGlory()
@@ -633,13 +633,13 @@ if(!Dungeon.HasChest)
             if (GameState != GameState.RegroupPhase)
                 return RepeatLastMessage("You can seek glory after finishing a level in the dungeon. ");
             // user wants to continue to next level
-            string message = "You decided to seek glory and challenge the next level of the dungeon! ";
+            string message = $"<amazon:emotion name=\"excited\" intensity=\"medium\"> You seek glory and challenge level {Dungeon.Level + 1}! </amazon:emotion> ";
             message += Dungeon.CreateNextDungeonLevel();
             
             message += UpdatePhaseIfNeeded(Dungeon.DetermineDungeonPhase());
             RepromptMessage = message;
             SaveData();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         private string UpdatePhaseIfNeeded(GameState newGameState)
@@ -660,7 +660,7 @@ if(!Dungeon.HasChest)
                     break;
                 case GameState.DragonPhase:
                     GameState = newGameState;
-                    return $"You are now facing a dragon. You need to select {Hero.DefeatDragonCompanionCount} companions of different types to defeat the dragon and continue. Your party consists of: {Hero.GetPartyAsString()}. Use the select command to start selection. ";
+                    return $"{SoundManager.DragonSound(true)} You are now facing a dragon. You need to select {Hero.DefeatDragonCompanionCount} companions of different types to defeat the dragon and continue. Your party consists of: {Hero.GetPartyAsString()}. Use the select command to start selection. ";
                     break;
                 case GameState.RegroupPhase:
                     if (Dungeon.Level == 10)
@@ -697,14 +697,14 @@ if(!Dungeon.HasChest)
             string message = "";
 
             if (GameState != GameState.MonsterPhase)
-                return ResponseBuilder.Ask("Scrolls can only be used during the monster phase.", RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask("Scrolls can only be used during the monster phase.", RepromptBuilder.Create(RepromptMessage), Session);
 
             // we are in Monster phase let's check if we have a scroll
             if (!Hero.IsCompanionInParty("scroll", true))
             {
                 // scroll not in party
                 message = "You don't have a scroll in your party.";
-                return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session); 
+                return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session); 
             }
             // we have a scroll, let'let's set the game state to dice selection phase
             // first move scroll to graveyard
@@ -715,7 +715,7 @@ if(!Dungeon.HasChest)
             RepromptMessage = message;
             SaveData();
 
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         public SkillResponse DragonDiceSelection(IntentRequest request)
@@ -727,7 +727,7 @@ if(!Dungeon.HasChest)
             if (distinctCompanionCount > Hero.DefeatDragonCompanionCount - 1)
             {
                 message = $"You have already selected {Hero.DefeatDragonCompanionCount} companions of different type. To clear the selection and start over, say clear dice selection. ";
-                return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
             }
             var validSlots = request.Intent.Slots.Where(s => s.Value.Value != null);
             bool selectionApplied = false;
@@ -769,18 +769,18 @@ if(!Dungeon.HasChest)
             else
                 message = $"Invalid dice selection. You need to select {Hero.DefeatDragonCompanionCount} different companions in your party to defeat the dragon. ";
 
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
 
         }
 
         public SkillResponse DefeatDragon()
         {
             if (GameState != GameState.DragonPhase)
-                return ResponseBuilder.Ask("You currently do not see a dragon you can attack. ", RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask("You currently do not see a dragon you can attack. ", RepromptBuilder.Create(RepromptMessage), Session);
             // player wants to defeat dragon, let's check if they have 3 distinct dice
             int distinctCompanionCount = Hero.PartyDice.Count(d => d.IsSelected);
             if(distinctCompanionCount < Hero.DefeatDragonCompanionCount)
-                return ResponseBuilder.Ask($"You need to select {Hero.DefeatDragonCompanionCount} distinct companions to defeat the dragon. ", RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask($"You need to select {Hero.DefeatDragonCompanionCount} distinct companions to defeat the dragon. ", RepromptBuilder.Create(RepromptMessage), Session);
 
             // OK we have 3 party dice selected, let's kill the dragon
             var treasure = Dungeon.DefeatDragon();
@@ -789,7 +789,7 @@ if(!Dungeon.HasChest)
             RepromptMessage = message;
             SaveData();
 
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
 
             
         }
@@ -801,7 +801,7 @@ if(!Dungeon.HasChest)
             if(GameState != GameState.MonsterPhase && GameState != GameState.LootPhase && GameState != GameState.DragonPhase)
             {
                 // cannot use item in this phase
-                return ResponseBuilder.Ask("Items can only be used when you are fighting monsters, looting, or fighting the dragon. ", RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask("Items can only be used when you are fighting monsters, looting, or fighting the dragon. ", RepromptBuilder.Create(RepromptMessage), Session);
             }
             // let's check if we have item in inventory
             string selectedItem = request.Intent.Slots["SelectedTreasureItem"].Value;
@@ -809,7 +809,7 @@ if(!Dungeon.HasChest)
             if (item == null)
             {
                 // item is not in inventory
-                return ResponseBuilder.Ask($"{selectedItem} is not in your inventory. Say inventory to check your inventory. ", RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask($"{selectedItem} is not in your inventory. Say inventory to check your inventory. ", RepromptBuilder.Create(RepromptMessage), Session);
             }
             // ok the item is present let's use it
             string message = "";
@@ -842,7 +842,7 @@ if(!Dungeon.HasChest)
             RepromptMessage = message;
             SaveData();
 
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         private string UseTownPortalTreasureItem(TreasureItem item)
@@ -919,7 +919,7 @@ if(!Dungeon.HasChest)
             {
                 // we are not in a dice selection phase
                 string errorMessage = "Invalid action. Dice selection can be done after using a scroll, when you are fighting the dragon, or using certain hero abilities. ";
-                return ResponseBuilder.Ask(errorMessage, RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask(errorMessage, RepromptBuilder.Create(RepromptMessage), Session);
             }
             // check if we are in dragon phase, we need a special selection for that
             if(GameState == GameState.DragonPhase)
@@ -969,7 +969,7 @@ if(!Dungeon.HasChest)
                 message = "Invalid selection. You can only select dice from your party or  the dungeon dice. Also, you cannot select party dice that were added from a treasure or dice that are already selected. ";
             RepromptMessage = message;
             SaveData();
-            response = ResponseBuilder.Ask(message, RepromptBuilder.Create(message), Session);
+            response = ResponseCreator.Ask(message, RepromptBuilder.Create(message), Session);
             return response;
         }
 
@@ -978,7 +978,7 @@ if(!Dungeon.HasChest)
             if (GameState != GameState.StandardDiceSelection && GameState != GameState.PartyFormation && GameState != GameState.DragonPhase && GameState != GameState.DiceSelectionForCalculatedStrike && GameState != GameState.DiceSelectionForCharmMonster && GameState != GameState.DiceSelectionForMesmerize)
             {
                 string errorMessage = "Invalid action. Dice selection can be done after using a scroll or when you are fighting the dragon.";
-                return ResponseBuilder.Ask(errorMessage, RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask(errorMessage, RepromptBuilder.Create(RepromptMessage), Session);
             }
             var diceList = new List<Die>();
             diceList.AddRange(Hero.PartyDice);
@@ -988,7 +988,7 @@ if(!Dungeon.HasChest)
             string message = "Dice selection was cleared. ";
             RepromptMessage = message;
             SaveData();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(message), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(message), Session);
         }
 
         public SkillResponse RollSelectedDice()
@@ -996,10 +996,10 @@ if(!Dungeon.HasChest)
             if (GameState != GameState.StandardDiceSelection && GameState != GameState.PartyFormation)
             {
                 string errorMessage = "Invalid action. You can roll dice after using a scroll and selecting the dice you want to roll.";
-                return ResponseBuilder.Ask(errorMessage, RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask(errorMessage, RepromptBuilder.Create(RepromptMessage), Session);
             }
 
-            string message = "";
+            string message = $"{SoundManager.DiceRollSound(true)} ";
             message += Hero.RollSelectedDice();
             message += Dungeon.RollSelectedDice();
             bool diceRolled = true;
@@ -1012,7 +1012,7 @@ if(!Dungeon.HasChest)
                 message += UpdatePhaseIfNeeded(Dungeon.DetermineDungeonPhase());
             RepromptMessage = message;
             SaveData();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(message), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(message), Session);
         }
 
         public SkillResponse TransformCompanion(IntentRequest request)
@@ -1021,7 +1021,7 @@ if(!Dungeon.HasChest)
             if(GameState != GameState.MonsterPhase && GameState != GameState.LootPhase && GameState != GameState.DragonPhase)
             {
                 // cannot use transform
-                return ResponseBuilder.Ask("You can't transform your companions at this time. ", RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask("You can't transform your companions at this time. ", RepromptBuilder.Create(RepromptMessage), Session);
             }
 
             // if hero is enchantress, use a different transform
@@ -1033,7 +1033,7 @@ if(!Dungeon.HasChest)
             if (!Hero.IsCompanionInParty(companion, true))
             {
                 message = $"{companion} is not in your party. You need to select an active party member to transform. ";
-                return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
             }
             Enum.TryParse(companion.FirstCharToUpper(), out CompanionType companionType);
             // let's check if the selected hero has a transform ability
@@ -1041,7 +1041,7 @@ if(!Dungeon.HasChest)
 
             SaveData();
 
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         private SkillResponse TransformScroll(IntentRequest request)
@@ -1050,19 +1050,19 @@ if(!Dungeon.HasChest)
             string message = "";
             // check if scroll is in party
             if (!Hero.PartyDice.Any(d => d.Companion == CompanionType.Scroll))
-                return ResponseBuilder.Ask("You do not have a scroll in your party. You can transform scrolls when you have them in your party. ", RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask("You do not have a scroll in your party. You can transform scrolls when you have them in your party. ", RepromptBuilder.Create(RepromptMessage), Session);
             // we have a scroll let's check if companion is valid
             string companion = request.Intent.Slots["SourceCompanion"].Value;
             
             bool parseComplete = Enum.TryParse(companion.FirstCharToUpper(), out CompanionType companionType);
             if(!parseComplete)
-                return ResponseBuilder.Ask($"{companion} is not a valid companion. Valid companions are: fighter, mage, cleric, thief, and champion. Try saying transform scroll again and provide a valid companion. ", RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask($"{companion} is not a valid companion. Valid companions are: fighter, mage, cleric, thief, and champion. Try saying transform scroll again and provide a valid companion. ", RepromptBuilder.Create(RepromptMessage), Session);
             // we have a valid companion let's transform
             message = Hero.TransformCompanion(companionType);
 
             SaveData();
 
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         public SkillResponse ActivateUltimate(HeroUltimates ultimate, IntentRequest request = null)
@@ -1070,7 +1070,7 @@ if(!Dungeon.HasChest)
             // check if this hero can use the chosen ability
             string errormessage = ValidateHeroAbility(ultimate);
             if (!string.IsNullOrEmpty(errormessage))
-                return ResponseBuilder.Ask(errormessage, RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask(errormessage, RepromptBuilder.Create(RepromptMessage), Session);
                             string message = "";
             switch (ultimate)
             {
@@ -1231,7 +1231,7 @@ if(!Dungeon.HasChest)
             RepromptMessage = message;
             SaveData();
 
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
 
         }
 
@@ -1240,7 +1240,7 @@ if(!Dungeon.HasChest)
             var dice = Dungeon.DungeonDice;
             int selectedCount = dice.Count(d => d.IsSelected && d.IsMonster);
             if (selectedCount > 1)
-                return ResponseBuilder.Ask("You have already selected two monsters. Say calculated strike to defeat them, or clear dice selection to start over. ", RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask("You have already selected two monsters. Say calculated strike to defeat them, or clear dice selection to start over. ", RepromptBuilder.Create(RepromptMessage), Session);
             var validSlots = request.Intent.Slots.Where(s => s.Value.Value != null);
             bool selectionApplied = false;
             foreach (var item in validSlots)
@@ -1259,7 +1259,7 @@ if(!Dungeon.HasChest)
             }
 
             if (!selectionApplied)
-                return ResponseBuilder.Ask("Invalid monster selection. You can only select monsters that are present in the dungeon and are not already selected. ", RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask("Invalid monster selection. You can only select monsters that are present in the dungeon and are not already selected. ", RepromptBuilder.Create(RepromptMessage), Session);
             string message = "";
             if (selectedCount == 1)
                 message = $"You selected {dice.First(d => d.IsSelected).Name}. You can select one more monster or say calculated strike to complete your action. ";
@@ -1267,7 +1267,7 @@ if(!Dungeon.HasChest)
                 message = $"You selected {dice.First(d => d.IsSelected).Name} and {dice.Last(d => d.IsSelected).Name}. Say calculated strike to defeat them. ";
             RepromptMessage = message;
             SaveData();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
 
         }
 
@@ -1276,7 +1276,7 @@ if(!Dungeon.HasChest)
             var dice = Dungeon.DungeonDice;
             int selectedCount = dice.Count(d => d.IsSelected && d.IsMonster);
             if (selectedCount > 1)
-                return ResponseBuilder.Ask("You have already selected two monsters. Say Mesmerize to transform them to one potion, or clear dice selection to start over. ", RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask("You have already selected two monsters. Say Mesmerize to transform them to one potion, or clear dice selection to start over. ", RepromptBuilder.Create(RepromptMessage), Session);
             var validSlots = request.Intent.Slots.Where(s => s.Value.Value != null);
             bool selectionApplied = false;
             foreach (var item in validSlots)
@@ -1295,7 +1295,7 @@ if(!Dungeon.HasChest)
             }
 
             if (!selectionApplied)
-                return ResponseBuilder.Ask("Invalid monster selection. You can only select monsters that are present in the dungeon and are not already selected. ", RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask("Invalid monster selection. You can only select monsters that are present in the dungeon and are not already selected. ", RepromptBuilder.Create(RepromptMessage), Session);
             string message = "";
             if (selectedCount == 1)
                 message = $"You selected {dice.First(d => d.IsSelected).Name}. You can select one more monster or say Mesmerize to complete your action. ";
@@ -1303,7 +1303,7 @@ if(!Dungeon.HasChest)
                 message = $"You selected {dice.First(d => d.IsSelected).Name} and {dice.Last(d => d.IsSelected).Name}. Say Mesmerize to transform them to one potion. ";
             RepromptMessage = message;
             SaveData();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
 
         }
 
@@ -1312,7 +1312,7 @@ if(!Dungeon.HasChest)
             var dice = Dungeon.DungeonDice;
             int selectedCount = dice.Count(d => d.IsSelected && d.IsMonster);
             if (selectedCount > 0)
-                return ResponseBuilder.Ask("You have already selected a monster. Say Charm Monster to transform it to a potion, or clear dice selection to start over. ", RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask("You have already selected a monster. Say Charm Monster to transform it to a potion, or clear dice selection to start over. ", RepromptBuilder.Create(RepromptMessage), Session);
             var validSlots = request.Intent.Slots.Where(s => s.Value.Value != null);
             bool selectionApplied = false;
             foreach (var item in validSlots)
@@ -1331,14 +1331,14 @@ if(!Dungeon.HasChest)
             }
 
             if (!selectionApplied)
-                return ResponseBuilder.Ask("Invalid monster selection. You can only select monsters that are present in the dungeon. ", RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask("Invalid monster selection. You can only select monsters that are present in the dungeon. ", RepromptBuilder.Create(RepromptMessage), Session);
             string message = "";
             if (selectedCount == 1)
                 message = $"You selected {dice.First(d => d.IsSelected).Name}. Say Charm Monster to transform it to one potion. ";
             
             RepromptMessage = message;
             SaveData();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
 
         }
 
@@ -1349,7 +1349,7 @@ if(!Dungeon.HasChest)
 
             int monsterCount = Dungeon.DungeonDice.Count(d =>d.IsSelected);
             if (monsterCount < 1)
-                return ResponseBuilder.Ask("You need to select up to two monsters to complete your calculated strike. Say select followed by a monster name. ", RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask("You need to select up to two monsters to complete your calculated strike. Say select followed by a monster name. ", RepromptBuilder.Create(RepromptMessage), Session);
             // kill the selected monsters
             var dice = Dungeon.DungeonDice;
             string message = monsterCount > 1 ? $"You performed a calculated strike and defeated {dice.First(d => d.IsSelected).Name} and {dice.Last(d => d.IsSelected).Name}. " : $"You performed a calculated strike and defeated {dice.First(d => d.IsSelected).Name}. ";
@@ -1358,7 +1358,7 @@ if(!Dungeon.HasChest)
 
             RepromptMessage = message;
             SaveData();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         public SkillResponse PerformMesmerize()
@@ -1368,7 +1368,7 @@ if(!Dungeon.HasChest)
 
             int monsterCount = Dungeon.DungeonDice.Count(d => d.IsSelected);
             if (monsterCount < 1)
-                return ResponseBuilder.Ask("You need to select up to two monsters to Mesmerize. Say select followed by a monster name. ", RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask("You need to select up to two monsters to Mesmerize. Say select followed by a monster name. ", RepromptBuilder.Create(RepromptMessage), Session);
             // transform the selected monsters
             var dice = Dungeon.DungeonDice;
             string message = monsterCount > 1 ? $"You mesmerized {dice.First(d => d.IsSelected).Name} and {dice.Last(d => d.IsSelected).Name}, and transformed them to one potion. " : $"You mesmerized one {dice.First(d => d.IsSelected).Name} and transformed it to one potion. ";
@@ -1380,7 +1380,7 @@ if(!Dungeon.HasChest)
 
             RepromptMessage = message;
             SaveData();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         public SkillResponse PerformCharmMonster()
@@ -1390,7 +1390,7 @@ if(!Dungeon.HasChest)
 
             int monsterCount = Dungeon.DungeonDice.Count(d => d.IsSelected);
             if (monsterCount < 1)
-                return ResponseBuilder.Ask("You need to select a monster to charm it. Say select followed by a monster name. ", RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask("You need to select a monster to charm it. Say select followed by a monster name. ", RepromptBuilder.Create(RepromptMessage), Session);
             // transform the selected monster
             var dice = Dungeon.DungeonDice;
             var monster = dice.First(d => d.IsSelected);
@@ -1401,7 +1401,7 @@ if(!Dungeon.HasChest)
 
             RepromptMessage = message;
             SaveData();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         private string ValidateHeroAbility(HeroUltimates ultimate)
@@ -1496,7 +1496,7 @@ if(!Dungeon.HasChest)
                     string message = UpdatePhaseIfNeeded(Dungeon.DetermineDungeonPhase());
                     RepromptMessage = message;
                     SaveData();
-                    response = ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+                    response = ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
                     break;
                 case GameState.ContinuePrompt:
                     IsGameInProgress = false;
@@ -1515,7 +1515,7 @@ if(!Dungeon.HasChest)
             if (GameState == GameState.MainMenu)
                 return RepeatLastMessage("You can check the dungeon status when you start a new game. ");
             string message = Dungeon.GetDungeonStatus();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         public SkillResponse GetPartyStatus()
@@ -1523,7 +1523,7 @@ if(!Dungeon.HasChest)
             if (GameState == GameState.MainMenu)
                 return RepeatLastMessage("You can check party status when you start a new game. ");
             string message = Hero.GetPartyStatus();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         public SkillResponse GetInventoryStatus()
@@ -1531,12 +1531,12 @@ if(!Dungeon.HasChest)
             if (GameState == GameState.MainMenu)
                 return RepeatLastMessage("You can check your ivnentory when you start a new game. ");
             string message = Hero.GetInventoryStatus();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         public SkillResponse RepeatLastMessage(string message = "")
         {
-            return ResponseBuilder.Ask(message + RepromptMessage, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message + RepromptMessage, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         private void SaveData()
@@ -1667,22 +1667,22 @@ if(!Dungeon.HasChest)
         {
             string message = "";
             if (Hero == null)
-                return ResponseBuilder.Ask("You haven't selected a hero yet. Say new game to start a new game. ", RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask("You haven't selected a hero yet. Say new game to start a new game. ", RepromptBuilder.Create(RepromptMessage), Session);
 
 
             message = Hero.SpecialtyInformation;
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         public SkillResponse GetUltimateInformation()
         {
             string message = "";
             if (Hero == null)
-                return ResponseBuilder.Ask("You haven't selected a hero yet. Say new game to start a new game. ", RepromptBuilder.Create(RepromptMessage), Session);
+                return ResponseCreator.Ask("You haven't selected a hero yet. Say new game to start a new game. ", RepromptBuilder.Create(RepromptMessage), Session);
 
 
             message = Hero.UltimateInformation;
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         public SkillResponse GetItemInformation(IntentRequest request)
@@ -1727,7 +1727,7 @@ if(!Dungeon.HasChest)
                     break;
             }
 
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         public SkillResponse GetHelp()
@@ -1792,7 +1792,7 @@ if(!Dungeon.HasChest)
                     break;
             }
 
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         public SkillResponse ResolveNextIntent()
@@ -1802,12 +1802,12 @@ if(!Dungeon.HasChest)
             if (++RuleSelector > Utilities.NUMBER_OF_RULES)
             {
                 RuleSelector = Utilities.NUMBER_OF_RULES;
-                return ResponseBuilder.Ask("You completed the rules, say new game to start a new game. ", RepromptBuilder.Create(Utilities.GetRule(RuleSelector)), Session);
+                return ResponseCreator.Ask("You completed the rules, say new game to start a new game. ", RepromptBuilder.Create(Utilities.GetRule(RuleSelector)), Session);
             }
             string message = Utilities.GetRule(RuleSelector);
             RepromptMessage = message;
             SaveData();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(message), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(message), Session);
                 
         }
 
@@ -1818,12 +1818,12 @@ if(!Dungeon.HasChest)
             if (--RuleSelector < 0)
             {
                 RuleSelector = 0;
-                return ResponseBuilder.Ask("You cannot go back. Say next to continue. ", RepromptBuilder.Create(Utilities.GetRule(RuleSelector)), Session);
+                return ResponseCreator.Ask("You cannot go back. Say next to continue. ", RepromptBuilder.Create(Utilities.GetRule(RuleSelector)), Session);
             }
             string message = Utilities.GetRule(RuleSelector);
             RepromptMessage = message;
             SaveData();
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(message), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(message), Session);
         }
 
         public SkillResponse ReadRules()
@@ -1833,14 +1833,14 @@ if(!Dungeon.HasChest)
             RepromptMessage = "Say next to continue and learn how to play the game. Say new game to start a new game. ";
             RuleSelector = -1;
             GameState = GameState.Rules;
-            return ResponseBuilder.Ask(rules, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(rules, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         public SkillResponse ChangeLog()
         {
-            string message = "Dungeon Roll Beta Version 7 Change log: Added detailed rules to teach new players how to play. Minor changes to descriptions. Say new game to start a new game, say rules for the rules, say help if you need help. ";
+            string message = "Dungeon Roll Beta Version 8 Change log: Added a few sound effects. Say new game to start a new game, say rules for the rules, say help if you need help. ";
 
-            return ResponseBuilder.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
     }
 }

@@ -127,7 +127,7 @@ namespace DungeonRollAlexa.Main.GameObjects
                 DungeonDice.Add(die);
             }
             string dragons = DragonsLair > 0 ? $"The number of dragon dice in the Dragon's lair is {DragonsLair}. " : "";
-            string message = $"Rolling the dungeon dice for level {Level}. {dragons}";
+            string message = $"{SoundManager.DiceRollSound(true)} {dragons}";
             return message;
 
         }

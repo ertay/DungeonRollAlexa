@@ -1,4 +1,6 @@
-﻿namespace DungeonRollAlexa.Main.GameObjects
+﻿using DungeonRollAlexa.Helpers;
+
+namespace DungeonRollAlexa.Main.GameObjects
 {
     public class KnightDragonSlayerHero : Hero
     {
@@ -17,7 +19,7 @@
         {
             // roll party dice to create your party
             // transform scrolls to champions for this hero
-            string message = "Rolling the party dice. Your party consists of: ";
+            string message = $"Rolling the party dice. {SoundManager.DiceRollSound(true)} Your party consists of: ";
             int scrollCount = 0;
             for (int i = 0; i < partySize; i++)
             {

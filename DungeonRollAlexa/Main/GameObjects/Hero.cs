@@ -66,7 +66,7 @@ namespace DungeonRollAlexa.Main.GameObjects
         {
             // roll party dice to create your party
             // use the size to determine the size of party as some heroes may have a larger party
-            string message = "Rolling the party dice. Your party consists of: ";
+            string message = $"Rolling the party dice.{SoundManager.DiceRollSound(true)} Your party consists of: ";
             for (int i = 0; i <partySize ; i++)
             {
                 PartyDie die = new PartyDie();
@@ -161,8 +161,9 @@ namespace DungeonRollAlexa.Main.GameObjects
             }
             
             Inventory.Add(treasureItem);
-            string message = $"You used your {selectedCompanions}, to defeat the dragon. You acquired {treasureItem.TreasureType.GetDescription()}. ";
+            string message = $"{SoundManager.DragonDeathSound(true)} <amazon:emotion name=\"excited\" intensity=\"medium\">You used your {selectedCompanions}, to defeat the dragon. You acquired {treasureItem.TreasureType.GetDescription()}. ";
             message += GainExperiencePoints(1);
+            message += "</amazon:emotion>";
             return message;
         }
 

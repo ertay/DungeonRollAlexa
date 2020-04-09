@@ -7,7 +7,7 @@ namespace DungeonRollAlexa.Extensions
 {
     public static class RepromptBuilder
     {
-        public static Reprompt Create(string text) => Create(new PlainTextOutputSpeech { Text = text });
+        public static Reprompt Create(string text) => Create(new SsmlOutputSpeech{ Ssml = $"<speak> {text} </speak>" });
 
         public static Reprompt Create(IOutputSpeech speech) => new Reprompt { OutputSpeech = speech };
     }

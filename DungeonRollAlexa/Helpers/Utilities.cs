@@ -103,7 +103,7 @@ namespace DungeonRollAlexa.Helpers
                     rule = "Keep in mind that when you quaff potions, the party member that you chose to quaff potions is first moved to the graveyard. For example, if you have one party member in the graveyard, and two available potions, you can use a party member to quaff both potions and revive the party member that was already in the graveyard plus the one that you just used to quaff potions. Say next to continue.";
                     break;
                 case 12:
-                    rule = "All this fighting is certain to attract the attention of the Dragon! If there are three or more dice in the Dragon's Lair, the Dragon arrives and you must defeat it to proceed! ! Say next to continue.";
+                    rule = "We are halfway there, just a few more things to know! All this fighting is certain to attract the attention of the Dragon! If there are three or more dice in the Dragon's Lair, the Dragon arrives and you must defeat it to proceed! ! Say next to continue.";
                     break;
                 case 13:
                     rule = "When fighting the dragon, you must select three different companions to defeat it. Use the select command to select your companions. If you are unable to defeat the dragon, you must use the flee command to complete your delve without earning any experience points. Say next to continue.";
@@ -130,7 +130,7 @@ namespace DungeonRollAlexa.Helpers
                     rule = "Used Treasure items are shuffled into the available pool of treasures. Unused Treasure items contribute to your final score at the end of the game. Say next to continue.";
                     break;
                 case 21:
-                    rule = "We are almost done! When you gain five or more experience points, your hero levels up. When this happens, depending on your hero, you gain a new specialty or ultimate ability. You can say specialty, or say ultimate ability, during a dungeon delve to learn how to use them. Say next to continue.";
+                    rule = "<amazon:emotion name=\"excited\" intensity=\"low\">We are almost done!</amazon:emotion> When you gain five or more experience points, your hero levels up. When this happens, depending on your hero, you gain a new specialty or ultimate ability. You can say specialty, or say ultimate ability, during a dungeon delve to learn how to use them. Say next to continue.";
                     break;
                 case 22:
                     rule = "If at any point during a dungeon delve you need to check what is available in your party, you can simply say party status. You can also check the dungeon status by saying dungeon status. Say next to continue.";
@@ -139,7 +139,7 @@ namespace DungeonRollAlexa.Helpers
                     rule = "When you complete your third dungeon delve, I will calculate your final score. Your final score is equal to your experience points plus points received from unused treasure items. The town portal is worth two points, and all other items are worth one point. Additionally, for each pair of dragon scales, you gain two extra points! Say next to continue to the final step.";
                     break;
                 case 24:
-                    rule = "You are now ready to begin! If you ever need help during a dungeon delve, just say help to get information about valid commands. Good luck adventurer! Say new game to start a new game.";
+                    rule = "You are now ready to begin! If you ever need help during a dungeon delve, just say help to get information about valid commands. <amazon:emotion name=\"excited\" intensity=\"medium\">Good luck adventurer! Say new game to start a new game.</amazon:emotion>";
                     break;
             }
             return rule;

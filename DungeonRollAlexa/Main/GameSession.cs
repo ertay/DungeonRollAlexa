@@ -88,7 +88,7 @@ namespace DungeonRollAlexa.Main
             }
             else
             {
-                message = $"Welcome to Dungeon Roll Beta Version 8. To begin, say new game. To learn how to play, say rules. Say help at any point during the game if you need help. Say what's new to get information about this version. ";
+                message = $"Welcome to Dungeon Roll. To begin, say new game. To learn how to play, say rules. Say help at any point during the game if you need help. Say about for more information about the game. ";
                 GameState = GameState.MainMenu;
             }
             RepromptMessage = message;
@@ -1737,7 +1737,7 @@ if(!Dungeon.HasChest)
             switch (GameState)
             {
                 case GameState.MainMenu:
-                    message = "You are in the main menu. To start a new game, say new game. To listen to the game rules, say rules. Say help at any point in the game to learn about valid commands. ";
+                    message = "You are in the main menu. To start a new game, say new game. To listen to the game rules, say rules. Say help at any point in the game to learn about valid commands. Say about to get more information about the game. ";
                     break;
                 case GameState.DetailedHeroSelection:
                     message = "You are in the hero selection phase. If you want to pick the hero that is presented, say yes. Otherwise, say no. ";
@@ -1836,9 +1836,16 @@ if(!Dungeon.HasChest)
             return ResponseCreator.Ask(rules, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
+        public SkillResponse AboutGame()
+        {
+            string message = "Dungeon Roll Version 1.0. This is a fanmade Alexa implementation of the board game created by Ertay Shashko. The original board game is designed by Chris Darden, and published by Tasty Minstrel Games. This Alexa variant was created to make the game fully accessible to blind players. If you like the game, you can buy the physical board game. If you have any questions or comments about the game, you can get in touch by sending an email to SightlessFun@outlook.com. To start a new game, say new game. To learn how to play, say rules. ";
+
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+        }
+
         public SkillResponse ChangeLog()
         {
-            string message = "Dungeon Roll Beta Version 8 Change log: Added a few sound effects. Say new game to start a new game, say rules for the rules, say help if you need help. ";
+            string message = "Dungeon Roll Beta Version 1.0 Change log: This is the Initial public release. Say new game to start a new game, say rules for the rules, say help if you need help. ";
 
             return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }

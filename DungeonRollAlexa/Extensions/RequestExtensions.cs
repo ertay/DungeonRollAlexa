@@ -48,8 +48,8 @@ namespace DungeonRollAlexa.Extensions
                 return false;
             }
 
-            var isTimestampValid = RequestVerification.RequestTimestampWithinTolerance(skillRequest);
-            var isValid = await RequestVerification.Verify(signature, certUrl, body);
+            bool isTimestampValid = RequestVerification.RequestTimestampWithinTolerance(skillRequest);
+            bool isValid = await RequestVerification.Verify(signature, certUrl, body);
 
             if (!isValid || !isTimestampValid)
             {

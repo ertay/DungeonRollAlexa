@@ -1581,6 +1581,9 @@ if(!Dungeon.HasChest)
                 throw new NullReferenceException("Session not initialized. Cannot load data.");
             }
 
+            if (Session.Attributes.Count < 1)
+                return;
+
             Dictionary<string, object> attributes = Session.Attributes;
 
             GameState = (GameState)Utilities.ParseInt(attributes["gameState"]);

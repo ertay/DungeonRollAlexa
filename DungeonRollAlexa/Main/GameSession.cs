@@ -263,7 +263,7 @@ namespace DungeonRollAlexa.Main
             Dungeon = new Dungeon();
             // we created the hero move to the party creation phase
             string message = InitializeDungeonDelve();
-            RepromptMessage = message;
+            
             SaveData();
             return ResponseCreator.Ask(heroMessage + message, RepromptBuilder.Create(RepromptMessage), Session);
         }
@@ -278,27 +278,37 @@ namespace DungeonRollAlexa.Main
             // check if hero can do any actions during party formation, otherwise we move to Monster phase
             if (Hero.HasPartyFormationActions)
             {
-                message += $"{Hero.PartyFormationActionMessage}";
+                RepromptMessage = $"{Hero.PartyFormationActionMessage}";
+                message += RepromptMessage;
             }
             else if (Dungeon.HasMonsters)
             {
                 string monster = Dungeon.DungeonDice.First(d => d.IsMonster).Name;
-                message += $"You are in the monster phase. Attack the {monster} to continue. ";
+                RepromptMessage = $"You are in the monster phase. Attack the {monster} to continue. ";
+                message += RepromptMessage;
                 GameState = GameState.MonsterPhase;
             }
             else if (Dungeon.HasLoot)
             {
                 // no monsters we go to loot phase
                 if(Dungeon.HasChest)
-                    message += "You are in the loot phase. You can say open chest, or say skip to ignore it and continue. ";
+                {
+                    RepromptMessage = "You are in the loot phase. You can say open chest, or say skip to ignore it and continue. ";
+                    message += RepromptMessage;
+                }
                 else
-                    message += "You are in the loot phase. You can quaff potions, or say skip to ignore the loot and continue. ";
+                {
+                    RepromptMessage = "You are in the loot phase. You can quaff potions, or say skip to ignore the loot and continue. ";
+                    message += RepromptMessage;
+                }
+                    
                 GameState = GameState.LootPhase;
             }
             else
             {
                 // no monsters or loot, we go to regroup phase
-                message += "You did not face any monsters or find loot in the first level. To seek glory and continue to level two, say seek glory. ";
+                RepromptMessage = "You did not face any monsters or find loot in the first level. To seek glory and continue to level two, say seek glory. ";
+                message += RepromptMessage;
                 GameState = GameState.RegroupPhase;
             }
             return message;
@@ -556,14 +566,15 @@ if(!Dungeon.HasChest)
             if (Dungeon.NumberOfDelves > 2)
             {
                 gameOver = true;
-                message += CalculateFinalScore();
+                RepromptMessage = CalculateFinalScore();
+                message += RepromptMessage;
                 GameState = GameState.MainMenu;
             }
                 
             // start a new dungeon delve if game is not over
             if(!gameOver)
                 message += InitializeDungeonDelve();
-            RepromptMessage = message;
+            
             SaveData();
             return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
@@ -616,14 +627,15 @@ if(!Dungeon.HasChest)
             if (Dungeon.NumberOfDelves > 2)
             {
                 gameOver = true;
-                message += CalculateFinalScore();
+                RepromptMessage = CalculateFinalScore();
+                message += RepromptMessage;
                 GameState = GameState.MainMenu;
             }
 
             // create new delve
             if(!gameOver)
                 message += InitializeDungeonDelve();
-            RepromptMessage = message;
+            
             SaveData();
             return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
@@ -636,8 +648,8 @@ if(!Dungeon.HasChest)
             string message = $"<amazon:emotion name=\"excited\" intensity=\"medium\"> You seek glory and challenge level {Dungeon.Level + 1}! </amazon:emotion> ";
             message += Dungeon.CreateNextDungeonLevel();
             
-            message += UpdatePhaseIfNeeded(Dungeon.DetermineDungeonPhase());
-            RepromptMessage = message;
+            RepromptMessage = UpdatePhaseIfNeeded(Dungeon.DetermineDungeonPhase());
+            message += RepromptMessage;
             SaveData();
             return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
@@ -837,6 +849,8 @@ if(!Dungeon.HasChest)
                     break;
                 case TreasureType.TownPortal:
                     message += UseTownPortalTreasureItem(item);
+                    SaveData();
+                    return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
                     break;
             }
             RepromptMessage = message;
@@ -853,13 +867,15 @@ if(!Dungeon.HasChest)
             Hero.Inventory.Remove(item);
             Dungeon.ReturnUsedTreasure(item);
             // town portal used award experience points
-            string message = Hero.GainExperiencePoints(Dungeon.Level);
+            string message = "You used a town portal to escape! ";
+            message += Hero.GainExperiencePoints(Dungeon.Level);
 
             bool gameOver = false;
             if(Dungeon.NumberOfDelves > 2)
             {
                 gameOver = true;
-                message += CalculateFinalScore();
+                RepromptMessage += CalculateFinalScore();
+                message += RepromptMessage;
                 GameState = GameState.MainMenu;
             }
 

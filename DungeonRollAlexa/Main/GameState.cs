@@ -20,5 +20,6 @@
         DiceSelectionForMesmerize,
         KillAdditionalMonster,
         Rules,
+        DetailedRulesPrompt,
     }
 }

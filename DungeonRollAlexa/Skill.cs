@@ -158,7 +158,7 @@ namespace DungeonRollAlexa
                     response = _gameSession.HeroDetailsAction(request);
                     break;
                 case "RulesIntent":
-                    response = _gameSession.ReadRules();
+                    response = _gameSession.DetailedRulesPrompt();
                     break;
                 case "SpecialtyInformationIntent":
                     response = _gameSession.GetSpecialtyInformation();

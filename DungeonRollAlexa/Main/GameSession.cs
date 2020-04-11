@@ -1468,6 +1468,9 @@ if(!Dungeon.HasChest)
                 case GameState.ContinuePrompt:
                     response = ContinuePreviousGame();
                     break;
+                case GameState.DetailedRulesPrompt:
+                    response = ReadRules(true);
+                    break;
                 default:
                     response= RepeatLastMessage("That was not a valid command. ");
                     break;
@@ -1501,6 +1504,9 @@ if(!Dungeon.HasChest)
                 case GameState.ContinuePrompt:
                     IsGameInProgress = false;
                     response = Welcome();
+                    break;
+                case GameState.DetailedRulesPrompt:
+                    response = ReadRules(false);
                     break;
                 default:
                     response = RepeatLastMessage("That was not a valid command. ");
@@ -1791,7 +1797,10 @@ if(!Dungeon.HasChest)
                     message = "Say yes to flee the dungeon without earning any experience points. Say no to continue the delve. ";
                     break;
                 case GameState.Rules:
-                    message = "Say next to continue to the next rule. Say back to listen to the previous rule. Say repeat to repeat the current rule. Say new game to start a new game. ";
+                    message = RuleSelector < 1 ? "Say next to start the step by step guide. Say new game to start a new game. " : "Say next to continue to the next rule. Say back to listen to the previous rule. Say repeat to repeat the current rule. Say new game to start a new game. ";
+                    break;
+                case GameState.DetailedRulesPrompt:
+                    message = "Say yes to start the detailed step by step how to play guide. Say no to listen to a short game overview. ";
                     break;
             }
 
@@ -1829,13 +1838,33 @@ if(!Dungeon.HasChest)
             return ResponseCreator.Ask(message, RepromptBuilder.Create(message), Session);
         }
 
-        public SkillResponse ReadRules()
+        public SkillResponse DetailedRulesPrompt()
+        {
+            GameState = GameState.DetailedRulesPrompt;
+            string message = "The Dungeon lies before you; you’ve assembled your party of hearty adventurers and have a few tricks up your sleeve. How far will you go to seek glory and fame? Will you risk losing everything? In Dungeon Roll your goal is to collect the most experience points by defeating monsters, battling the dragon, and amassing treasure. <break time=\"600ms\"/> Before we start with the rules, do you want to go  through the step by step guide? If you haven't played Dungeon Roll before, I recommend saying yes. Otherwise, say no to listen to a shorter game overview. ";
+            RepromptMessage = "Do you want to listen to the step by step how to play guide? ";
+            SaveData();
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+        }
+
+        public SkillResponse ReadRules(bool readDetailedRules)
         {
             IsGameInProgress = false;
-            string rules = "The Dungeon lies before you; you’ve assembled your party of hearty adventurers and have a few tricks up your sleeve. How far will you go to seek glory and fame? Will you risk losing everything? In Dungeon Roll your goal is to collect the most experience points by defeating monsters, battling the dragon, and amassing treasure. You select a Hero avatar, such as a Mercenary, Half-Goblin, or Enchantress, which provides you with unique powers. You assemble your party by rolling seven Party Dice, while Alexa, that would be me,  serves as the Dungeon Lord and rolls a number of Dungeon Dice based on how far you have progressed through the dungeon. You use Champion, Fighter, Cleric, Mage, Thief, and Scroll faces on the Party Dice to defeat monsters such as oozes and skeletons, to claim treasure inside chests, and to revive downed companions with potions. All this fighting in the dungeon is certain to attract the attention of the boss: The Dragon! When three or more Dragon faces appear on the Dungeon Dice, the Adventurer must battle the Dragon. Defeating the dragon is a team effort, requiring three different companion types. After three rounds, you add up your experience points and retire to the inn to celebrate your exploits and to plan your next foray into the next deadly dungeon! You can say help at any point during the game to get information about valid commands. Say next to learn how to play the game. ";
-            RepromptMessage = "Say next to continue and learn how to play the game. Say new game to start a new game. ";
-            RuleSelector = -1;
+            string rules = "";
+            if(!readDetailedRules)
+            {
+                rules = "Okay, here's the short game overview. You start by selecting a Hero avatar, such as a Mercenary, Half-Goblin, or Enchantress, which provides you with unique powers. You assemble your party by rolling seven Party Dice, while I,  serve as the Dungeon Lord and roll a number of Dungeon Dice based on how far you have progressed through the dungeon. You use Champion, Fighter, Cleric, Mage, Thief, and Scroll faces on the Party Dice to defeat monsters such as oozes and skeletons, to claim treasure inside chests, and to revive downed companions with potions. All this fighting in the dungeon is certain to attract the attention of the boss: The Dragon! When three or more Dragon faces appear on the Dungeon Dice, you must battle the Dragon. Defeating the dragon is a team effort, requiring three different companion types. After three rounds, you add up your experience points and retire to the inn to celebrate your exploits and to plan your next foray into the next deadly dungeon! You can say help at any point during the game to get information about valid commands. Say next to begin the step by step guide. Say new game to start a new game. ";
+                RepromptMessage = "Say next to continue and learn how to play the game. Say new game to start a new game. ";
+                RuleSelector= -1;
+            }
+            else
+            {
+                RuleSelector = 0;
+                rules = Utilities.GetRule(RuleSelector);
+                RepromptMessage = "Say next to continue. Say new game at any point to leave the guide and start a new game. ";
+            }
             GameState = GameState.Rules;
+            SaveData();
             return ResponseCreator.Ask(rules, RepromptBuilder.Create(RepromptMessage), Session);
         }
 

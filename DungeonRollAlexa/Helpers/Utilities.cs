@@ -1,4 +1,5 @@
-﻿using DungeonRollAlexa.Main.GameObjects;
+﻿using Alexa.NET.Request.Type;
+using DungeonRollAlexa.Main.GameObjects;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -143,6 +144,16 @@ namespace DungeonRollAlexa.Helpers
                     break;
             }
             return rule;
+        }
+
+        public static string GetSlotValue(string slotName, IntentRequest request)
+        {
+
+            var authority = request.Intent.Slots[slotName].Resolution.Authorities.FirstOrDefault();
+            if (authority == null || authority.Values == null)
+                return request.Intent.Slots[slotName].Value;
+            return authority.Values.First().Value.Name;
+
         }
 
         public static int ParseInt(object o)

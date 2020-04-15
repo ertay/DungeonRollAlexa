@@ -816,7 +816,7 @@ if(!Dungeon.HasChest)
                 return ResponseCreator.Ask("Items can only be used when you are fighting monsters, looting, or fighting the dragon. ", RepromptBuilder.Create(RepromptMessage), Session);
             }
             // let's check if we have item in inventory
-            string selectedItem = request.Intent.Slots["SelectedTreasureItem"].Value;
+            string selectedItem = Utilities.GetSlotValue("SelectedTreasureItem", request);
             TreasureItem item = Hero.GetTreasureFromInventory(selectedItem);
             if (item == null)
             {
@@ -1713,7 +1713,7 @@ if(!Dungeon.HasChest)
         public SkillResponse GetItemInformation(IntentRequest request)
         {
             string message = "";
-            string selectedItem = request.Intent.Slots["SelectedItem"].Value;
+            string selectedItem = Utilities.GetSlotValue("SelectedItem", request); ;
 
             switch (selectedItem)
             {

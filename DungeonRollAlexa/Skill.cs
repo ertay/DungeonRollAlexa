@@ -113,7 +113,7 @@ namespace DungeonRollAlexa
                     break;
                 case BuiltInIntent.Cancel:
                     {
-                        string message = "Thank you for playing Dungeon Roll! If you enjoyed playing it, you should try Desolate. Say Alexa, open Desolate Board Game, to play.";
+                        string message = "Thank you for playing Dungeon Roll! If you enjoyed playing it, you should try Desolate. Say Alexa, enable Desolate Board Game, to play.";
                         response = ResponseBuilder.Tell(message);
                         break;
                     }
@@ -126,7 +126,7 @@ namespace DungeonRollAlexa
 
                 case BuiltInIntent.Stop:
                     {
-                        string message = "Thank you for playing Dungeon Roll! If you enjoyed playing it, you should try Desolate. Say Alexa, open Desolate Board Game, to play.";
+                        string message = "Thank you for playing Dungeon Roll! If you enjoyed playing it, you should try Desolate. Say Alexa, enable Desolate Board Game, to play.";
                         response = ResponseBuilder.Tell(message);
                         break;
                     }

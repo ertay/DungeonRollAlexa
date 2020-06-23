@@ -11,7 +11,7 @@ namespace DungeonRollAlexa.Main.GameObjects
     /// </summary>
     public class Dungeon
     {
-        private const int TOTAL_DUNGEON_DICE = 7;
+        protected const int TOTAL_DUNGEON_DICE = 7;
         public int NumberOfDelves { get; set; }
         public int Level { get; set; }
         /// <summary>
@@ -65,7 +65,7 @@ namespace DungeonRollAlexa.Main.GameObjects
             return "You decided to ignore the remaining loot and continue. ";
         }
         
-        public string CreateNewDungeon()
+        public virtual string CreateNewDungeon()
         {
             string message = "";
 
@@ -105,7 +105,7 @@ namespace DungeonRollAlexa.Main.GameObjects
 
         }
 
-        public string CreateNextDungeonLevel()
+        public virtual string CreateNextDungeonLevel()
         {
             // creates the next dungeon level
             
@@ -132,7 +132,7 @@ namespace DungeonRollAlexa.Main.GameObjects
 
         }
 
-        public string RollSelectedDice()
+        public virtual string RollSelectedDice()
         {
             bool dungeonDiceRolled = false;
             foreach (var item in DungeonDice)
@@ -204,7 +204,7 @@ namespace DungeonRollAlexa.Main.GameObjects
             return message;
         }
 
-        private void CheckForDragons()
+        protected void CheckForDragons()
         {
             // Checks if there are dragons in the dungeon dice and increments the lair size
             for (int i = DungeonDice.Count - 1; i >= 0; i--)

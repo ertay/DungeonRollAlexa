@@ -279,6 +279,12 @@ namespace DungeonRollAlexa
                     else
                         response = _gameSession.PerformMesmerize();
                     break;
+                case "HealingSalveIntent":
+                    response = _gameSession.ActivateUltimate(HeroUltimates.HealingSalve, request);
+                    break;
+                case "TransformationPotionIntent":
+                    response = _gameSession.ActivateUltimate(HeroUltimates.TransformationPotion, request);
+                    break;
             }
 
             return response;

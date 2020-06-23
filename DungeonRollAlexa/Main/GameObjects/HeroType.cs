@@ -20,6 +20,8 @@ namespace DungeonRollAlexa.Main.GameObjects
         HalfGoblinChieftain,
         [Description("Enchantress - Specialty: Scrolls may be transformed to any other companion. The ultimate ability is Charm Monster which transforms a monster into a potion. Turns into Beguiler when leveled up and the ultimate ability is replaced with Mesmerize which transforms two monsters into one potion. ")]
         EnchantressBeguiler,
+        [Description("Alchemist - Specialty: All chests become potions. The ultimate ability is Healing Salve which rolls 1 Party die from the Graveyard and adds it to your Party. Turns into Thaumaturge when leveled up and the ultimate ability is replaced with Transformation Potion which rolls 2 Party dice from the Graveyard and adds them to your Party. ")]
+        AlchemistThaumaturge,
 
     }
 }   

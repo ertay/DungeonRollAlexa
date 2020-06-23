@@ -150,6 +150,9 @@ namespace DungeonRollAlexa.Main
                 case "enchantress":
                     HeroSelectorIndex = 7;
                     break;
+                case "alchemist":
+                    HeroSelectorIndex = 8;
+                    break;
                 default:
                     return RepeatLastMessage($"{hero} is not a valid hero. ");
             }
@@ -167,7 +170,7 @@ namespace DungeonRollAlexa.Main
         {
             GameState = GameState.BasicHeroSelection;
 
-            string message = "Alright. Here is a list of heroes to choose from: Spellsword, Mercenary, Occultist, Knight, Minstrel, Crusader, Half-Goblin, or Enchantress. Say a hero's name to begin. To learn more about a specific hero, say hero details. ";
+            string message = "Alright. Here is a list of heroes to choose from: Spellsword, Mercenary, Occultist, Knight, Minstrel, Crusader, Half-Goblin, Enchantress, or Alchemist. Say a hero's name to begin. To learn more about a specific hero, say hero details. ";
             RepromptMessage = message;
             SaveData();
             return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
@@ -211,6 +214,9 @@ namespace DungeonRollAlexa.Main
                     return SelectHero();
                 case "enchantress":
                     HeroSelectorIndex = 7;
+                    return SelectHero();
+                case "alchemist":
+                    HeroSelectorIndex = 8;
                     return SelectHero();
                 default:
                     return RepeatLastMessage($"{hero} is not a valid hero. ");
@@ -258,9 +264,13 @@ namespace DungeonRollAlexa.Main
                     Hero = new EnchantressBeguilerHero();
                     heroMessage = "You selected the Enchantress. ";
                     break;
+                case HeroType.AlchemistThaumaturge:
+                    Hero = new AlchemistThaumaturgeHero();
+                    heroMessage = "You selected the Alchemist. ";
+                    break;
             }
-
-            Dungeon = new Dungeon();
+            // if we have an alchemist, create a special dungeon for it
+            Dungeon = selectedHero != HeroType.AlchemistThaumaturge ? new Dungeon() : new DungeonForAlchemist();
             // we created the hero move to the party creation phase
             string message = InitializeDungeonDelve();
             
@@ -1242,6 +1252,12 @@ if(!Dungeon.HasChest)
                     }
 
                     break;
+                case HeroUltimates.HealingSalve:
+                    message = Hero.ActivateLevelOneUltimate();
+                    break;
+                case HeroUltimates.TransformationPotion:
+                    message = Hero.ActivateLevelTwoUltimate();
+                    break;
             }
             
             RepromptMessage = message;
@@ -1455,6 +1471,10 @@ if(!Dungeon.HasChest)
                     break;
                 case HeroType.EnchantressBeguiler:
                     if (ultimate == HeroUltimates.CharmMonster|| ultimate == HeroUltimates.Mesmerize)
+                        return string.Empty;
+                    break;
+                case HeroType.AlchemistThaumaturge:
+                    if (ultimate == HeroUltimates.HealingSalve || ultimate == HeroUltimates.TransformationPotion)
                         return string.Empty;
                     break;
             }

@@ -61,18 +61,7 @@ namespace DungeonRollAlexa.Main.GameObjects
 
             if (!dungeon.HasMonsters)
                 return "There are no monsters at the moment. Use Flurry of Arrows when you encounter goblins, oozes, or skeletons. ";
-            /*
-            var goblin = dungeon.DungeonDice.FirstOrDefault(d => d.DungeonDieType == DungeonDieType.Goblin);
-            var ooze = dungeon.DungeonDice.FirstOrDefault(d => d.DungeonDieType == DungeonDieType.Ooze);
-            var skeleton = dungeon.DungeonDice.FirstOrDefault(d => d.DungeonDieType == DungeonDieType.Skeleton);
-            var monsters = new List<DungeonDie>();
-            if(goblin != null)
-                monsters.Add(goblin);
-            if (ooze!= null)
-                monsters.Add(ooze);
-            if (skeleton!= null)
-                monsters.Add(skeleton);
-                */
+            
                 // select at most one monster of each type
             var monsters = dungeon.DungeonDice.Where(d => d.IsMonster).GroupBy(d => d.DungeonDieType).Select(g => g.First()).ToList();
             foreach (var item in monsters)

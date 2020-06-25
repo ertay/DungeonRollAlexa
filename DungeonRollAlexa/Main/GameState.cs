@@ -21,5 +21,6 @@
         KillAdditionalMonster,
         Rules,
         DetailedRulesPrompt,
+        DiceSelectionForCalledShot,
     }
 }

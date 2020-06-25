@@ -407,7 +407,7 @@ namespace DungeonRollAlexa.Main.GameObjects
             return message;
         }
 
-        public virtual void ActivateSpecialty() { }
+        public virtual string ActivateSpecialty(Dungeon dungeon = null) { return "This hero cannot use that ability. "; }
 
         public virtual string ActivateLevelOneUltimate() { return string.Empty; }
 
@@ -456,5 +456,10 @@ namespace DungeonRollAlexa.Main.GameObjects
                     break;
             }
         }
+
+        /// <summary>
+        /// Some heroes may need to rest when you move to a different level.
+        /// </summary>
+        public virtual void ResetOnDungeonLevelChange() { }
     }
 }   

@@ -22,6 +22,8 @@ namespace DungeonRollAlexa.Main.GameObjects
         EnchantressBeguiler,
         [Description("Alchemist - Specialty: All chests become potions. The ultimate ability is Healing Salve which rolls 1 Party die from the Graveyard and adds it to your Party. Turns into Thaumaturge when leveled up and the ultimate ability is replaced with Transformation Potion which rolls 2 Party dice from the Graveyard and adds them to your Party. ")]
         AlchemistThaumaturge,
+        [Description("Tracker - Specialty: Once per level, you may reroll 1 Goblin. The ultimate ability is Called Shot which lets you discard one monster of any type. Turns into Ranger when leveled up and the ultimate ability is replaced with Flurry Of Arrows which discards one monster of each type. ")]
+        TrackerRanger,
 
     }
 }   

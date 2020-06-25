@@ -40,10 +40,6 @@ namespace DungeonRollAlexa.Main.GameObjects
             return "You transformed a mage into a fighter. ";
         }
 
-        public override void ActivateSpecialty()
-        {
-            throw new NotImplementedException();
-        }
 
         public override string ActivateLevelOneUltimate(CompanionType? companion = null, Dungeon dungeon = null)
         {

@@ -204,7 +204,7 @@ namespace DungeonRollAlexa.Main.GameObjects
             return message;
         }
 
-        protected void CheckForDragons()
+        public void CheckForDragons()
         {
             // Checks if there are dragons in the dungeon dice and increments the lair size
             for (int i = DungeonDice.Count - 1; i >= 0; i--)

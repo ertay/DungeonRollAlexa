@@ -153,6 +153,9 @@ namespace DungeonRollAlexa.Main
                 case "alchemist":
                     HeroSelectorIndex = 8;
                     break;
+                case "tracker":
+                    HeroSelectorIndex = 9;
+                    break;
                 default:
                     return RepeatLastMessage($"{hero} is not a valid hero. ");
             }
@@ -170,7 +173,7 @@ namespace DungeonRollAlexa.Main
         {
             GameState = GameState.BasicHeroSelection;
 
-            string message = "Alright. Here is a list of heroes to choose from: Spellsword, Mercenary, Occultist, Knight, Minstrel, Crusader, Half-Goblin, Enchantress, or Alchemist. Say a hero's name to begin. To learn more about a specific hero, say hero details. ";
+            string message = "Alright. Here is a list of heroes to choose from: Spellsword, Mercenary, Occultist, Knight, Minstrel, Crusader, Half-Goblin, Enchantress, Alchemist, or Tracker. Say a hero's name to begin. To learn more about a specific hero, say hero details. ";
             RepromptMessage = message;
             SaveData();
             return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
@@ -217,6 +220,9 @@ namespace DungeonRollAlexa.Main
                     return SelectHero();
                 case "alchemist":
                     HeroSelectorIndex = 8;
+                    return SelectHero();
+                case "tracker":
+                    HeroSelectorIndex = 9;
                     return SelectHero();
                 default:
                     return RepeatLastMessage($"{hero} is not a valid hero. ");
@@ -268,6 +274,10 @@ namespace DungeonRollAlexa.Main
                     Hero = new AlchemistThaumaturgeHero();
                     heroMessage = "You selected the Alchemist. ";
                     break;
+                case HeroType.TrackerRanger:
+                    Hero = new TrackerRangerHero();
+                    heroMessage = "You selected the Tracker. ";
+                    break;
             }
             // if we have an alchemist, create a special dungeon for it
             Dungeon = selectedHero != HeroType.AlchemistThaumaturge ? new Dungeon() : new DungeonForAlchemist();
@@ -284,6 +294,7 @@ namespace DungeonRollAlexa.Main
             string message = "";
             message = CreateParty();
             Hero.IsExhausted = false;
+            Hero.ResetOnDungeonLevelChange();
             message += Dungeon.CreateNewDungeon();
             // check if hero can do any actions during party formation, otherwise we move to Monster phase
             if (Hero.HasPartyFormationActions)
@@ -657,6 +668,7 @@ if(!Dungeon.HasChest)
             // user wants to continue to next level
             string message = $"<amazon:emotion name=\"excited\" intensity=\"medium\"> You seek glory and challenge level {Dungeon.Level + 1}! </amazon:emotion> ";
             message += Dungeon.CreateNextDungeonLevel();
+            Hero.ResetOnDungeonLevelChange();
             
             RepromptMessage = UpdatePhaseIfNeeded(Dungeon.DetermineDungeonPhase());
             message += RepromptMessage;
@@ -941,7 +953,7 @@ if(!Dungeon.HasChest)
         /// <returns></returns>
         public SkillResponse SelectDice(IntentRequest request)
         {
-            if (GameState != GameState.StandardDiceSelection && GameState != GameState.PartyFormation && GameState != GameState.DragonPhase && GameState != GameState.DiceSelectionForCalculatedStrike && GameState != GameState.DiceSelectionForCharmMonster && GameState != GameState.DiceSelectionForMesmerize)
+            if (GameState != GameState.StandardDiceSelection && GameState != GameState.PartyFormation && GameState != GameState.DragonPhase && GameState != GameState.DiceSelectionForCalculatedStrike && GameState != GameState.DiceSelectionForCharmMonster && GameState != GameState.DiceSelectionForMesmerize && GameState != GameState.DiceSelectionForCalledShot)
             {
                 // we are not in a dice selection phase
                 string errorMessage = "Invalid action. Dice selection can be done after using a scroll, when you are fighting the dragon, or using certain hero abilities. ";
@@ -961,6 +973,9 @@ if(!Dungeon.HasChest)
 
             if (GameState == GameState.DiceSelectionForMesmerize)
                 return MesmerizeSelectDice(request);
+
+            if (GameState == GameState.DiceSelectionForCalledShot)
+                return CalledShotSelectDice(request);
 
             SkillResponse response = null;
             string message = "";
@@ -1001,9 +1016,9 @@ if(!Dungeon.HasChest)
 
         public SkillResponse ClearDiceSelection()
         {
-            if (GameState != GameState.StandardDiceSelection && GameState != GameState.PartyFormation && GameState != GameState.DragonPhase && GameState != GameState.DiceSelectionForCalculatedStrike && GameState != GameState.DiceSelectionForCharmMonster && GameState != GameState.DiceSelectionForMesmerize)
+            if (GameState != GameState.StandardDiceSelection && GameState != GameState.PartyFormation && GameState != GameState.DragonPhase && GameState != GameState.DiceSelectionForCalculatedStrike && GameState != GameState.DiceSelectionForCharmMonster && GameState != GameState.DiceSelectionForMesmerize && GameState != GameState.DiceSelectionForCalledShot)
             {
-                string errorMessage = "Invalid action. Dice selection can be done after using a scroll or when you are fighting the dragon.";
+                string errorMessage = "Invalid action. Dice selection can be done after using a scroll, when you are fighting the dragon, or for certain hero abilities.";
                 return ResponseCreator.Ask(errorMessage, RepromptBuilder.Create(RepromptMessage), Session);
             }
             var diceList = new List<Die>();
@@ -1258,6 +1273,29 @@ if(!Dungeon.HasChest)
                 case HeroUltimates.TransformationPotion:
                     message = Hero.ActivateLevelTwoUltimate();
                     break;
+                case HeroUltimates.CalledShot:
+                    if (GameState != GameState.MonsterPhase)
+                    {
+                        message = "Called Shot can only be used when you are fighting monsters. ";
+                        break;
+                    }
+                    message = Hero.ActivateLevelOneUltimate();
+                    if (string.IsNullOrEmpty(message))
+                    {
+                        message = "You are preparing to perform a Called Shot. Select a monster to complete your action. For example, say select goblin. ";
+                        GameState = GameState.DiceSelectionForCalledShot;
+                    }
+
+                    break;
+                case HeroUltimates.FlurryOfArrows:
+                    if (GameState != GameState.MonsterPhase)
+                    {
+                        message = "Flurry Of Arrows can only be used when you are fighting monsters. ";
+                        break;
+                    }
+                    message = Hero.ActivateLevelTwoUltimate(Dungeon);
+                    message += UpdatePhaseIfNeeded(Dungeon.DetermineDungeonPhase());
+                    break;
             }
             
             RepromptMessage = message;
@@ -1374,6 +1412,41 @@ if(!Dungeon.HasChest)
 
         }
 
+        public SkillResponse CalledShotSelectDice(IntentRequest request)
+        {
+            var dice = Dungeon.DungeonDice;
+            int selectedCount = dice.Count(d => d.IsSelected && d.IsMonster);
+            if (selectedCount > 0)
+                return ResponseCreator.Ask("You have already selected a monster. Say Called Shot to defeat it, or clear dice selection to start over. ", RepromptBuilder.Create(RepromptMessage), Session);
+            var validSlots = request.Intent.Slots.Where(s => s.Value.Value != null);
+            bool selectionApplied = false;
+            foreach (var item in validSlots)
+            {
+                if (selectedCount > 0)
+                    break;
+
+                string dieFace = item.Value.Value.ToString().ToLower();
+                var dieToSelect = dice.FirstOrDefault(d => d.Name == dieFace && !d.IsSelected && d.IsMonster);
+                if (dieToSelect != null)
+                {
+                    dieToSelect.IsSelected = true;
+                    selectedCount++;
+                    selectionApplied = true;
+                }
+            }
+
+            if (!selectionApplied)
+                return ResponseCreator.Ask("Invalid monster selection. You can only select monsters that are present in the dungeon. ", RepromptBuilder.Create(RepromptMessage), Session);
+            string message = "";
+            if (selectedCount == 1)
+                message = $"You selected {dice.First(d => d.IsSelected).Name}. Say Called Shot to defeat it. ";
+
+            RepromptMessage = message;
+            SaveData();
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+
+        }
+
         public SkillResponse PerformCalculatedStrike()
         {
             if (GameState != GameState.DiceSelectionForCalculatedStrike)
@@ -1436,6 +1509,40 @@ if(!Dungeon.HasChest)
             return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
+        public SkillResponse PerformRerollGoblin()
+        {
+            if (GameState != GameState.MonsterPhase)
+                return ResponseCreator.Ask("Rerolling goblins can only be done during the monster phase. ", RepromptBuilder.Create(RepromptMessage), Session);
+            string message = Hero.ActivateSpecialty(Dungeon);
+            message += UpdatePhaseIfNeeded(Dungeon.DetermineDungeonPhase());
+            RepromptMessage = message;
+            SaveData();
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+
+
+        }
+
+        public SkillResponse PerformCalledShot()
+        {
+            if (GameState != GameState.DiceSelectionForCalledShot)
+                return RepeatLastMessage("You cannot perform a Called Shot at the moment. ");
+
+            int monsterCount = Dungeon.DungeonDice.Count(d => d.IsSelected);
+            if (monsterCount < 1)
+                return ResponseCreator.Ask("You need to select a monster to perform a Called Shot. Say select followed by a monster name. ", RepromptBuilder.Create(RepromptMessage), Session);
+            // kill t he monster
+            var dice = Dungeon.DungeonDice;
+            var monster = dice.First(d => d.IsSelected);
+            string message = $"You performed a Called Shot and defeated one {monster.Name}. ";
+            monster.IsSelected = false;
+            dice.Remove(monster);
+            message += UpdatePhaseIfNeeded(Dungeon.DetermineDungeonPhase());
+
+            RepromptMessage = message;
+            SaveData();
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
+        }
+
         private string ValidateHeroAbility(HeroUltimates ultimate)
         {
             // returns empty string  if hero can use the ultimate
@@ -1475,6 +1582,10 @@ if(!Dungeon.HasChest)
                     break;
                 case HeroType.AlchemistThaumaturge:
                     if (ultimate == HeroUltimates.HealingSalve || ultimate == HeroUltimates.TransformationPotion)
+                        return string.Empty;
+                    break;
+                case HeroType.TrackerRanger:
+                    if (ultimate == HeroUltimates.CalledShot || ultimate == HeroUltimates.FlurryOfArrows)
                         return string.Empty;
                     break;
             }
@@ -1837,6 +1948,9 @@ if(!Dungeon.HasChest)
                     break;
                 case GameState.DetailedRulesPrompt:
                     message = "Say yes to start the detailed step by step how to play guide. Say no to listen to a short game overview. ";
+                    break;
+                case GameState.DiceSelectionForCalledShot:
+                    message = "You need to select a monster to complete your Called Shot action. Say select followed by a monster's name. For example, say select goblin. After selecting a monster, say Called Shot to complete your action. ";
                     break;
             }
 

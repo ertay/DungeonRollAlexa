@@ -26,11 +26,6 @@ namespace DungeonRollAlexa.Main.GameObjects
             HasPartyFormationActions = true;
         }
 
-        public override void ActivateSpecialty()
-        {
-            throw new System.NotImplementedException();
-        }
-
         public override string ActivateLevelOneUltimate()
         {
             if (IsExhausted)

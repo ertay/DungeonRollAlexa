@@ -206,6 +206,9 @@ namespace DungeonRollAlexa
                 case "TransformScrollIntent":
                     response = _gameSession.TransformCompanion(request);
                     break;
+                case "RerollGoblinIntent":
+                    response = _gameSession.PerformRerollGoblin();
+                    break;
                 case "SeekGloryIntent":
                     response = _gameSession.SeekGlory();
                     break;
@@ -284,6 +287,15 @@ namespace DungeonRollAlexa
                     break;
                 case "TransformationPotionIntent":
                     response = _gameSession.ActivateUltimate(HeroUltimates.TransformationPotion, request);
+                    break;
+                case "CalledShotIntent":
+                    if (_gameSession.GameState != GameState.DiceSelectionForCalledShot)
+                        response = _gameSession.ActivateUltimate(HeroUltimates.CalledShot, request);
+                    else
+                        response = _gameSession.PerformCalledShot();
+                    break;
+                case "FlurryOfArrowsIntent":
+                    response = _gameSession.ActivateUltimate(HeroUltimates.FlurryOfArrows, request);
                     break;
             }
 

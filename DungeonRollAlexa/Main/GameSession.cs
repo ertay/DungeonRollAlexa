@@ -88,7 +88,7 @@ namespace DungeonRollAlexa.Main
             }
             else
             {
-                message = $"Welcome to Dungeon Roll. To begin, say new game. To learn how to play, say rules. Say help at any point during the game if you need help. Say about for more information about the game. ";
+                message = $"Welcome to Dungeon Roll Beta. To begin, say new game. To learn how to play, say rules. Say help at any point during the game if you need help. Say about for more information about the game. ";
                 GameState = GameState.MainMenu;
             }
             RepromptMessage = message;
@@ -2020,14 +2020,14 @@ if(!Dungeon.HasChest)
 
         public SkillResponse AboutGame()
         {
-            string message = "Dungeon Roll Version 1.0. This is a fanmade Alexa implementation of the board game created by Ertay Shashko. The original board game is designed by Chris Darden, and published by Tasty Minstrel Games. This Alexa variant was created to make the game fully accessible to blind players. If you like the game, you can buy the physical board game. If you have any questions or comments about the game, you can get in touch by sending an email to SightlessFun@outlook.com. To start a new game, say new game. To learn how to play, say rules. ";
+            string message = "Dungeon Roll Beta Version 1.1. This is a fanmade Alexa implementation of the board game created by Ertay Shashko. The original board game is designed by Chris Darden, and published by Tasty Minstrel Games. This Alexa variant was created to make the game fully accessible to blind players. If you like the game, you can buy the physical board game. If you have any questions or comments about the game, you can get in touch by sending an email to SightlessFun@outlook.com. To start a new game, say new game. To learn how to play, say rules. ";
 
             return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         public SkillResponse ChangeLog()
         {
-            string message = "Dungeon Roll Beta Version 1.0 Change log: This is the Initial public release. Say new game to start a new game, say rules for the rules, say help if you need help. ";
+            string message = "Dungeon Roll Beta Version 1.1 Change log: Added the Alchemist and Tracker as new heroes. Say new game to start a new game, say rules for the rules, say help if you need help. ";
 
             return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }

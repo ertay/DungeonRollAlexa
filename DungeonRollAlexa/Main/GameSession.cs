@@ -156,6 +156,9 @@ namespace DungeonRollAlexa.Main
                 case "tracker":
                     HeroSelectorIndex = 9;
                     break;
+                case "archaeologist":
+                    HeroSelectorIndex = 10;
+                    break;
                 default:
                     return RepeatLastMessage($"{hero} is not a valid hero. ");
             }
@@ -173,7 +176,7 @@ namespace DungeonRollAlexa.Main
         {
             GameState = GameState.BasicHeroSelection;
 
-            string message = "Alright. Here is a list of heroes to choose from: Spellsword, Mercenary, Occultist, Knight, Minstrel, Crusader, Half-Goblin, Enchantress, Alchemist, or Tracker. Say a hero's name to begin. To learn more about a specific hero, say hero details. ";
+            string message = "Alright. Here is a list of heroes to choose from: Spellsword, Mercenary, Occultist, Knight, Minstrel, Crusader, Half-Goblin, Enchantress, Alchemist, Tracker, or Archaeologist. Say a hero's name to begin. To learn more about a specific hero, say hero details. ";
             RepromptMessage = message;
             SaveData();
             return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
@@ -223,6 +226,9 @@ namespace DungeonRollAlexa.Main
                     return SelectHero();
                 case "tracker":
                     HeroSelectorIndex = 9;
+                    return SelectHero();
+                case "archaeologist":
+                    HeroSelectorIndex = 10;
                     return SelectHero();
                 default:
                     return RepeatLastMessage($"{hero} is not a valid hero. ");
@@ -278,6 +284,10 @@ namespace DungeonRollAlexa.Main
                     Hero = new TrackerRangerHero();
                     heroMessage = "You selected the Tracker. ";
                     break;
+                case HeroType.ArchaeologistTombRaider:
+                    Hero = new ArchaeologistTombRaiderHero();
+                    heroMessage = "You selected the Archaeologist. ";
+                    break;
             }
             // if we have an alchemist, create a special dungeon for it
             Dungeon = selectedHero != HeroType.AlchemistThaumaturge ? new Dungeon() : new DungeonForAlchemist();
@@ -292,6 +302,7 @@ namespace DungeonRollAlexa.Main
         {
             GameState = GameState.PartyFormation;
             string message = "";
+            Dungeon.InitializeTreasureItems();
             message = CreateParty();
             Hero.IsExhausted = false;
             Hero.ResetOnDungeonLevelChange();
@@ -341,7 +352,7 @@ namespace DungeonRollAlexa.Main
 
             // reset the hero party / graveyard
             Hero.ClearParty();
-            message += Hero.RollPartyDice();
+            message += Hero.RollPartyDice(Dungeon);
 
             return message;
         }
@@ -605,6 +616,9 @@ if(!Dungeon.HasChest)
             // we completed the game, mark the boolean
             IsGameInProgress = false;
             // third delve complete let's calculate score and show rank
+            // if hero was archaeologist, we need to discard six treasures
+            if (Hero is ArchaeologistTombRaiderHero archaeologist)
+                archaeologist.DiscardTreasuresAtGameEnd();
             int score = Hero.Experience;
             Hero.Inventory.ForEach(i => score += i.ExperiencePoints); ;
             // each dragon scale pair worth an additional two points
@@ -944,6 +958,37 @@ if(!Dungeon.HasChest)
             message += UpdatePhaseIfNeeded(Dungeon.DetermineDungeonPhase());
 
             return message;
+        }
+
+        public SkillResponse DiscardTreasureItem(IntentRequest request)
+        {
+            if (GameState != GameState.DiscardingTreasures)
+            {
+                // discarding treasure only applicable for archaeologist hero after using ultimate ability
+                return ResponseCreator.Ask("You cannot discard a treasure item. To use an item, say use treasure item. ", RepromptBuilder.Create(RepromptMessage), Session);
+            }
+            // let's check if we have item in inventory
+            string selectedItem = Utilities.GetSlotValue("SelectedItem", request);
+            TreasureItem item = Hero.GetTreasureFromInventory(selectedItem);
+            if (item == null)
+            {
+                // item is not in inventory
+                return ResponseCreator.Ask($"{selectedItem} is not in your inventory. Say inventory to check your inventory, and then try the discard treasure command again. ", RepromptBuilder.Create(RepromptMessage), Session);
+            }
+            // ok the item is present return it to the dungeon
+            Hero.Inventory.Remove(item);
+            Dungeon.ReturnUsedTreasure(item);
+            var archaeologist = Hero as ArchaeologistTombRaiderHero;
+            archaeologist.RemainingTreasureDiscards--;
+            string message = $"You discarded {item.TreasureType.GetDescription()}. ";
+            if (archaeologist.RemainingTreasureDiscards < 1)
+                message += UpdatePhaseIfNeeded(Dungeon.DetermineDungeonPhase());
+            else
+                message += $"Say discard treasure item to discard another treasure. ";
+
+            RepromptMessage = message;
+            SaveData();
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(message), Session);
         }
 
         /// <summary>
@@ -1296,6 +1341,17 @@ if(!Dungeon.HasChest)
                     message = Hero.ActivateLevelTwoUltimate(Dungeon);
                     message += UpdatePhaseIfNeeded(Dungeon.DetermineDungeonPhase());
                     break;
+                case HeroUltimates.TreasureSeeker:
+                    if (GameState != GameState.MonsterPhase && GameState != GameState.LootPhase && GameState != GameState.DragonPhase && GameState != GameState.RegroupPhase)
+                    {
+                        message += "Treasure Seeker can only be used during the monster phase, loot phase, dragon phase, or regroup phase. ";
+                        break;
+                    }
+                    message = Hero.IsLeveledUp ? Hero.ActivateLevelTwoUltimate(Dungeon) : Hero.ActivateLevelOneUltimate(Dungeon);
+                    // if ability was successful, we need to switch game state to discarding treasures
+                    if ((Hero as ArchaeologistTombRaiderHero).RemainingTreasureDiscards > 0)
+                        GameState = GameState.DiscardingTreasures;
+                    break;
             }
             
             RepromptMessage = message;
@@ -1588,6 +1644,10 @@ if(!Dungeon.HasChest)
                     if (ultimate == HeroUltimates.CalledShot || ultimate == HeroUltimates.FlurryOfArrows)
                         return string.Empty;
                     break;
+                case HeroType.ArchaeologistTombRaider:
+                    if (ultimate == HeroUltimates.TreasureSeeker)
+                        return string.Empty;
+                    break;
             }
 
             return "Your hero cannot use that ability. ";
@@ -1682,7 +1742,7 @@ if(!Dungeon.HasChest)
         public SkillResponse GetInventoryStatus()
         {
             if (GameState == GameState.MainMenu)
-                return RepeatLastMessage("You can check your ivnentory when you start a new game. ");
+                return RepeatLastMessage("You can check your inventory when you start a new game. ");
             string message = Hero.GetInventoryStatus();
             return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
@@ -2027,7 +2087,7 @@ if(!Dungeon.HasChest)
 
         public SkillResponse ChangeLog()
         {
-            string message = "Dungeon Roll Beta Version 1.1 Change log: Added the Alchemist and Tracker as new heroes. Say new game to start a new game, say rules for the rules, say help if you need help. ";
+            string message = "Dungeon Roll Beta Version 1.1 Change log: Added the Alchemist, Archaeologist, and Tracker as new heroes. Say new game to start a new game, say rules for the rules, say help if you need help. ";
 
             return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }

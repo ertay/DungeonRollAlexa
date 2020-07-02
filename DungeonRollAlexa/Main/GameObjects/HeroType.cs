@@ -24,6 +24,8 @@ namespace DungeonRollAlexa.Main.GameObjects
         AlchemistThaumaturge,
         [Description("Tracker - Specialty: Once per level, you may reroll 1 Goblin. The ultimate ability is Called Shot which lets you discard one monster of any type. Turns into Ranger when leveled up and the ultimate ability is replaced with Flurry Of Arrows which discards one monster of each type. ")]
         TrackerRanger,
+        [Description("Archaeologist - Specialty: Acquire two treasure items when forming a party, but discard six treasure items at game end. The ultimate ability is Treasure Seeker which lets you draw two treasure items and then discard two treasure items. Turns into Tomb Raider when leveled up and the Treasure Seeker ability lets you draw two treasure items, and then discard one treasure item. ")]
+        ArchaeologistTombRaider,
 
     }
 }   

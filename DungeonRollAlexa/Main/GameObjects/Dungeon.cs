@@ -64,13 +64,18 @@ namespace DungeonRollAlexa.Main.GameObjects
             DungeonDice.Clear();
             return "You decided to ignore the remaining loot and continue. ";
         }
+
+        public void InitializeTreasureItems()
+        {
+            if (TreasureItems == null)
+                TreasureItems = Utilities.GenerateTreasureItems();
+        }
         
         public virtual string CreateNewDungeon()
         {
             string message = "";
 
-            if (TreasureItems == null)
-                TreasureItems = Utilities.GenerateTreasureItems();
+            
             NumberOfDelves++;
             Level = 1;
             DungeonDice = new List<DungeonDie>();

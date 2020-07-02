@@ -15,7 +15,7 @@ namespace DungeonRollAlexa.Main.GameObjects
             HeroType = HeroType.KnightDragonSlayer;
         }
 
-        public override string RollPartyDice(int partySize = 7)
+        public override string RollPartyDice(Dungeon dungeon, int partySize = 7)
         {
             // roll party dice to create your party
             // transform scrolls to champions for this hero

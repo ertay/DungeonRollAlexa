@@ -22,5 +22,6 @@
         Rules,
         DetailedRulesPrompt,
         DiceSelectionForCalledShot,
+        DiscardingTreasures,
     }
 }

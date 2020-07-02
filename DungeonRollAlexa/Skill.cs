@@ -297,6 +297,12 @@ namespace DungeonRollAlexa
                 case "FlurryOfArrowsIntent":
                     response = _gameSession.ActivateUltimate(HeroUltimates.FlurryOfArrows, request);
                     break;
+                case "TreasureSeekerIntent":
+                    response = _gameSession.ActivateUltimate(HeroUltimates.TreasureSeeker, request);
+                    break;
+                case "DiscardTreasureIntent":
+                    response = _gameSession.DiscardTreasureItem(request);
+                    break;
             }
 
             return response;

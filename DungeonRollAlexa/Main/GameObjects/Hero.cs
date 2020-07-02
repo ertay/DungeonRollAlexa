@@ -62,7 +62,7 @@ namespace DungeonRollAlexa.Main.GameObjects
             Graveyard = 0;
         }
 
-        public virtual string RollPartyDice(int partySize = 7)
+        public virtual string RollPartyDice(Dungeon dungeon, int partySize = 7)
         {
             // roll party dice to create your party
             // use the size to determine the size of party as some heroes may have a larger party

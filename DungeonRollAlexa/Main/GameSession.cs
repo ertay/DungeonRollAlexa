@@ -122,7 +122,7 @@ namespace DungeonRollAlexa.Main
         {
             if (GameState != GameState.BasicHeroSelection && GameState != GameState.DetailedHeroSelection)
                 return RepeatLastMessage("That is not a valid action. ");
-            string hero = request.Intent.Slots["SelectedHero"].Value;
+            string hero = request.Intent.Slots["SelectedHero"].Value.ToLower();
 
             switch (hero)
             {
@@ -158,6 +158,9 @@ namespace DungeonRollAlexa.Main
                     break;
                 case "archaeologist":
                     HeroSelectorIndex = 10;
+                    break;
+                case "viking":
+                    HeroSelectorIndex = 11;
                     break;
                 default:
                     return RepeatLastMessage($"{hero} is not a valid hero. ");
@@ -176,7 +179,7 @@ namespace DungeonRollAlexa.Main
         {
             GameState = GameState.BasicHeroSelection;
 
-            string message = "Alright. Here is a list of heroes to choose from: Spellsword, Mercenary, Occultist, Knight, Minstrel, Crusader, Half-Goblin, Enchantress, Alchemist, Tracker, or Archaeologist. Say a hero's name to begin. To learn more about a specific hero, say hero details. ";
+            string message = "Alright. Here is a list of heroes to choose from: Spellsword, Mercenary, Occultist, Knight, Minstrel, Crusader, Half-Goblin, Enchantress, Alchemist, Tracker, Archaeologist, or Viking. Say a hero's name to begin. To learn more about a specific hero, say hero details. ";
             RepromptMessage = message;
             SaveData();
             return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
@@ -193,7 +196,7 @@ namespace DungeonRollAlexa.Main
         {
             if (GameState != GameState.BasicHeroSelection)
                 return RepeatLastMessage("Invalid action. ");
-            string hero = request.Intent.Slots["SelectedHero"].Value;
+            string hero = request.Intent.Slots["SelectedHero"].Value.ToLower();
 
             switch (hero)
             {
@@ -230,6 +233,9 @@ namespace DungeonRollAlexa.Main
                 case "archaeologist":
                     HeroSelectorIndex = 10;
                     return SelectHero();
+                case "viking":
+                    HeroSelectorIndex = 11;
+                    return SelectHero();
                 default:
                     return RepeatLastMessage($"{hero} is not a valid hero. ");
             }
@@ -239,6 +245,7 @@ namespace DungeonRollAlexa.Main
         {
             // we started a new game, mark the boolean
             IsGameInProgress = true;
+            Dungeon = null;
             // create new hero based on selection and start the game
             HeroType selectedHero = Utilities.GetHeroTypes()[HeroSelectorIndex];
             string heroMessage = "";
@@ -279,6 +286,7 @@ namespace DungeonRollAlexa.Main
                 case HeroType.AlchemistThaumaturge:
                     Hero = new AlchemistThaumaturgeHero();
                     heroMessage = "You selected the Alchemist. ";
+                    Dungeon = new DungeonForAlchemist();
                     break;
                 case HeroType.TrackerRanger:
                     Hero = new TrackerRangerHero();
@@ -288,9 +296,15 @@ namespace DungeonRollAlexa.Main
                     Hero = new ArchaeologistTombRaiderHero();
                     heroMessage = "You selected the Archaeologist. ";
                     break;
+                case HeroType.VikingUndeadViking:
+                    Hero = new VikingUndeadVikingHero();
+                    heroMessage = "You selected the Viking. ";
+                    Dungeon = new DungeonForViking();
+                    break;
             }
-            // if we have an alchemist, create a special dungeon for it
-            Dungeon = selectedHero != HeroType.AlchemistThaumaturge ? new Dungeon() : new DungeonForAlchemist();
+            // if dungeon is not created yet, create default dungeon
+            if (Dungeon == null)
+                Dungeon = new Dungeon();
             // we created the hero move to the party creation phase
             string message = InitializeDungeonDelve();
             
@@ -591,7 +605,7 @@ if(!Dungeon.HasChest)
                 return RepeatLastMessage("You can retire when you complete a level. ");
             string message = $"You retired on level {Dungeon.Level}. ";
             // lets award experience points 
-            message += Hero.GainExperiencePoints(Dungeon.Level);
+            message += Hero.GainExperiencePoints(Dungeon.Level, Dungeon);
 
             
             bool gameOver = false;
@@ -714,7 +728,7 @@ if(!Dungeon.HasChest)
                     if (Dungeon.Level == 10)
                     {
                         string message = "You cleared the dungeon! ";
-                        message += Hero.GainExperiencePoints(Dungeon.Level);
+                        message += Hero.GainExperiencePoints(Dungeon.Level, Dungeon);
                         if (Dungeon.NumberOfDelves > 2)
                         {
                             message += CalculateFinalScore();
@@ -832,7 +846,7 @@ if(!Dungeon.HasChest)
 
             // OK we have 3 party dice selected, let's kill the dragon
             var treasure = Dungeon.DefeatDragon();
-            string message = Hero.DefeatDragon(treasure);
+            string message = Hero.DefeatDragon(treasure, Dungeon);
             message += UpdatePhaseIfNeeded(Dungeon.DetermineDungeonPhase());
             RepromptMessage = message;
             SaveData();
@@ -904,7 +918,7 @@ if(!Dungeon.HasChest)
             Dungeon.ReturnUsedTreasure(item);
             // town portal used award experience points
             string message = "You used a town portal to escape! ";
-            message += Hero.GainExperiencePoints(Dungeon.Level);
+            message += Hero.GainExperiencePoints(Dungeon.Level, Dungeon);
 
             bool gameOver = false;
             if(Dungeon.NumberOfDelves > 2)
@@ -1352,6 +1366,10 @@ if(!Dungeon.HasChest)
                     if ((Hero as ArchaeologistTombRaiderHero).RemainingTreasureDiscards > 0)
                         GameState = GameState.DiscardingTreasures;
                     break;
+                case HeroUltimates.VikingFury:
+                    message = Hero.ActivateLevelOneUltimate(Dungeon);
+                    message += UpdatePhaseIfNeeded(Dungeon.DetermineDungeonPhase());
+                    break;
             }
             
             RepromptMessage = message;
@@ -1646,6 +1664,10 @@ if(!Dungeon.HasChest)
                     break;
                 case HeroType.ArchaeologistTombRaider:
                     if (ultimate == HeroUltimates.TreasureSeeker)
+                        return string.Empty;
+                    break;
+                case HeroType.VikingUndeadViking:
+                    if (ultimate == HeroUltimates.VikingFury)
                         return string.Empty;
                     break;
             }
@@ -2012,6 +2034,9 @@ if(!Dungeon.HasChest)
                 case GameState.DiceSelectionForCalledShot:
                     message = "You need to select a monster to complete your Called Shot action. Say select followed by a monster's name. For example, say select goblin. After selecting a monster, say Called Shot to complete your action. ";
                     break;
+                case GameState.DiscardingTreasures:
+                    message = "You need to discard treasures to continue. Say discard followed by the treasure name you would like to discard. Say inventory to check your treasure items. ";
+                    break;
             }
 
             return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
@@ -2087,7 +2112,7 @@ if(!Dungeon.HasChest)
 
         public SkillResponse ChangeLog()
         {
-            string message = "Dungeon Roll Beta Version 1.1 Change log: Added the Alchemist, Archaeologist, and Tracker as new heroes. Say new game to start a new game, say rules for the rules, say help if you need help. ";
+            string message = "Dungeon Roll Beta Version 1.1 Change log: Added the Alchemist, Archaeologist, Viking, and Tracker as new heroes. Say new game to start a new game, say rules for the rules, say help if you need help. ";
 
             return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }

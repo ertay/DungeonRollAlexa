@@ -4,19 +4,21 @@ using System.Collections.Generic;
 
 namespace DungeonRollAlexa.Main.GameObjects
 {
-
     /// <summary>
-    /// The alchemist needs a modified dungeon as chests are all transformed to potions.
-    /// This class overrides the methods that involve dungeon dice rolls to transform chests into potions.
+    /// Special dungeon for Viking. When Viking is leveled up, all skeletons become potions.
     /// </summary>
-    public class DungeonForAlchemist : Dungeon
+    public class DungeonForViking : Dungeon
     {
+        public bool SkeletonsToPotions { get; set; }
+
         public override string CreateNewDungeon()
         {
+            // create default dungeon if we don't need to transform skeletons yet
+            if(!SkeletonsToPotions)
+                return base.CreateNewDungeon();
+
             string message = "";
 
-            if (TreasureItems == null)
-                TreasureItems = Utilities.GenerateTreasureItems();
             NumberOfDelves++;
             Level = 1;
             DungeonDice = new List<DungeonDie>();
@@ -41,11 +43,11 @@ namespace DungeonRollAlexa.Main.GameObjects
                 DragonsLair++;
                 message += "The first level of the dungeon is empty, but there is one dragon die in the Dragon's Lair. ";
             }
-            else if (die.DungeonDieType == DungeonDieType.Chest)
+            else if (die.DungeonDieType == DungeonDieType.Skeleton)
             {
                 die.DungeonDieType = DungeonDieType.Potion;
                 DungeonDice.Add(die);
-                message += $"The first level in the dungeon has one {DungeonDice[0].DungeonDieType} which was transformed from a chest. ";
+                message += $"The first level in the dungeon has one {DungeonDice[0].DungeonDieType} which was transformed from a skeleton. ";
             }
             else
             {
@@ -59,12 +61,14 @@ namespace DungeonRollAlexa.Main.GameObjects
 
         public override string CreateNextDungeonLevel()
         {
-            // creates the next dungeon level
+            // use default level creation if we dont need to transform  yet
+            if(!SkeletonsToPotions)
+                return base.CreateNextDungeonLevel();
 
             Level++;
             // get the number of dice we can roll
             int dungeonDiceToRoll = Math.Min(Level, TOTAL_DUNGEON_DICE - DragonsLair);
-            int transformedChests = 0;
+            int transformedSkeletons = 0;
             for (int i = 0; i < dungeonDiceToRoll; i++)
             {
                 var die = new DungeonDie();
@@ -75,30 +79,33 @@ namespace DungeonRollAlexa.Main.GameObjects
                     // we got a dragon continue with a new die
                     continue;
                 }
-                // transform chest into potion if die is a chest
-                if (die.DungeonDieType == DungeonDieType.Chest)
+                // transform skeleton into potion if die is a skeleton
+                if (die.DungeonDieType == DungeonDieType.Skeleton)
                 {
                     die.DungeonDieType = DungeonDieType.Potion;
-                    transformedChests++;
+                    transformedSkeletons++;
                 }
-                    // at it to dungeon dice
-                    DungeonDice.Add(die);
+                // at it to dungeon dice
+                DungeonDice.Add(die);
             }
             string dragons = DragonsLair > 0 ? $"The number of dragon dice in the Dragon's lair is {DragonsLair}. " : "";
-            string chestsToPotions = "";
-            if (transformedChests == 1)
-                chestsToPotions = "One chest was transformed to a potion. ";
-            if (transformedChests > 1)
-                chestsToPotions = $"{transformedChests} chests were transformed to potions. ";
-            string message = $"{SoundManager.DiceRollSound(true)} {dragons}{chestsToPotions}";
+            string skeletonsToPotionsMessage = "";
+            if (transformedSkeletons == 1)
+                skeletonsToPotionsMessage = "One skeleton was transformed to a potion. ";
+            if (transformedSkeletons > 1)
+                skeletonsToPotionsMessage = $"{transformedSkeletons} skeletons were transformed to potions. ";
+            string message = $"{SoundManager.DiceRollSound(true)} {dragons}{skeletonsToPotionsMessage}";
             return message;
-
         }
 
         public override string RollSelectedDice()
         {
+            // use default rolling if we don't need to transform skeletons to potions
+            if(!SkeletonsToPotions)
+                return base.RollSelectedDice();
+
             bool dungeonDiceRolled = false;
-            int transformedChests = 0;
+            int transformedSkeletons = 0;
             foreach (var item in DungeonDice)
             {
                 if (item.IsSelected)
@@ -106,21 +113,21 @@ namespace DungeonRollAlexa.Main.GameObjects
                     item.Roll();
                     item.IsSelected = false;
                     dungeonDiceRolled = true;
-                    if(item.DungeonDieType == DungeonDieType.Chest)
+                    if (item.DungeonDieType == DungeonDieType.Skeleton)
                     {
                         item.DungeonDieType = DungeonDieType.Potion;
-                        transformedChests++;
+                        transformedSkeletons++;
                     }
                 }
             }
             // we may have rolled dragons, let's make sure
             CheckForDragons();
-            string chestsToPotions = "";
-            if (transformedChests == 1)
-                chestsToPotions = "One chest was transformed to a potion. ";
-            if (transformedChests > 1)
-                chestsToPotions = $"{transformedChests} chests were transformed to potions. ";
-            string message = dungeonDiceRolled ? $"{chestsToPotions}Dungeon now has {GetDungeonDiceAsString()}. The number of dragon dice in the Dragon's lair is {DragonsLair}. " : "";
+            string skeletonsToPotionsMessage = "";
+            if (transformedSkeletons == 1)
+                skeletonsToPotionsMessage = "One skeleton was transformed to a potion. ";
+            if (transformedSkeletons > 1)
+                skeletonsToPotionsMessage = $"{transformedSkeletons} skeletons were transformed to potions. ";
+            string message = dungeonDiceRolled ? $"{skeletonsToPotionsMessage}Dungeon now has {GetDungeonDiceAsString()}. The number of dragon dice in the Dragon's lair is {DragonsLair}. " : "";
 
             return message;
         }

@@ -2,6 +2,6 @@
 {
     public enum HeroUltimates
     {
-        ArcaneBlade, ArcaneFury, CalculatedStrike, BattlefieldPresence, AnimateDead, CommandDead, Battlecry, BardsSong, HolyStrike, DivineIntervention, PleaForHelp, PullRank, CharmMonster, Mesmerize, HealingSalve, TransformationPotion, CalledShot, FlurryOfArrows, TreasureSeeker,
+        ArcaneBlade, ArcaneFury, CalculatedStrike, BattlefieldPresence, AnimateDead, CommandDead, Battlecry, BardsSong, HolyStrike, DivineIntervention, PleaForHelp, PullRank, CharmMonster, Mesmerize, HealingSalve, TransformationPotion, CalledShot, FlurryOfArrows, TreasureSeeker, VikingFury,
     }
 }   

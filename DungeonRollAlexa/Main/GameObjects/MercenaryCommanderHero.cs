@@ -53,9 +53,9 @@ namespace DungeonRollAlexa.Main.GameObjects
             return string.Empty;
         }
 
-        public override void LevelUp()
+        public override void LevelUp(Dungeon dungeon)
         {
-            base.LevelUp();
+            base.LevelUp(dungeon);
             HasPartyFormationActions = false;
         }
 

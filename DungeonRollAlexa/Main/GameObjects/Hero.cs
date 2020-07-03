@@ -78,7 +78,7 @@ namespace DungeonRollAlexa.Main.GameObjects
             return message;
         }
 
-        public string GainExperiencePoints(int points)
+        public string GainExperiencePoints(int points, Dungeon dungeon)
         {
             Experience += points;
             string message = $"You gained {points} experience and now have {Experience} experience. ";
@@ -86,7 +86,7 @@ namespace DungeonRollAlexa.Main.GameObjects
             {
                 if (Experience > 4)
                 {
-                    LevelUp();
+                    LevelUp(dungeon);
                     message += LevelUpMessage;
                 }
             }
@@ -150,7 +150,7 @@ namespace DungeonRollAlexa.Main.GameObjects
             return message;
         }
 
-        public string DefeatDragon(TreasureItem treasureItem)
+        public string DefeatDragon(TreasureItem treasureItem, Dungeon dungeon)
         {
             // player defeated dragon, let's remove the dice selection and move companions to graveyard
             string selectedCompanions= string.Join(", ", PartyDice.Where(d => d.IsSelected).Select(d => d.Name).ToList());
@@ -162,7 +162,7 @@ namespace DungeonRollAlexa.Main.GameObjects
             
             Inventory.Add(treasureItem);
             string message = $"{SoundManager.DragonDeathSound(true)} <amazon:emotion name=\"excited\" intensity=\"medium\">You used your {selectedCompanions}, to defeat the dragon. You acquired {treasureItem.TreasureType.GetDescription()}. ";
-            message += GainExperiencePoints(1);
+            message += GainExperiencePoints(1, dungeon);
             message += "</amazon:emotion>";
             return message;
         }
@@ -426,7 +426,7 @@ namespace DungeonRollAlexa.Main.GameObjects
 
         // public virtual string ActivateLevelTwoUltimate(Dictionary<string, Slot> slots, Dungeon dungeon = null) { return string.Empty; }
 
-        public virtual void LevelUp() 
+        public virtual void LevelUp(Dungeon dungeon) 
         {
             IsLeveledUp = true;
         }

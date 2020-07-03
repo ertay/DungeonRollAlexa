@@ -59,9 +59,9 @@ namespace DungeonRollAlexa.Main.GameObjects
             return ActivateLevelOneUltimate(dungeon);
         }
 
-        public override void LevelUp()
+        public override void LevelUp(Dungeon dungeon)
         {
-            base.LevelUp();
+            base.LevelUp(dungeon);
             DefeatDragonCompanionCount = 2;
         }
     }

@@ -303,6 +303,9 @@ namespace DungeonRollAlexa
                 case "DiscardTreasureIntent":
                     response = _gameSession.DiscardTreasureItem(request);
                     break;
+                case "VikingFuryIntent":
+                    response = _gameSession.ActivateUltimate(HeroUltimates.VikingFury, request);
+                    break;
             }
 
             return response;

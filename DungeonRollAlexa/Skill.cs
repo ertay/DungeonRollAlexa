@@ -39,8 +39,8 @@ namespace DungeonRollAlexa
             // setup game session
             _gameSession = new GameSession(skillRequest.Session);
             
-
-            await _gameSession.LoadProgressFromDb();
+            if(isFirstRequest)
+                await _gameSession.LoadProgressFromDb();
             // Setup language resources.
             var store = SetupLanguageResources();
             var locale = skillRequest.CreateLocale(store);
@@ -72,6 +72,7 @@ namespace DungeonRollAlexa
                 }
                 else if (request is SessionEndedRequest sessionEndedRequest)
                 {
+                    await _gameSession.SaveProgressToDb();
                     log.LogInformation("Session ended");
                     response = ResponseBuilder.Empty();
                 }
@@ -86,7 +87,7 @@ namespace DungeonRollAlexa
             if (_gameSession.PlayerScore != null)
                 await _gameSession.UpdateHighScores();
 
-            await _gameSession.SaveProgressToDb();
+            //await _gameSession.SaveProgressToDb();
 
             return new OkObjectResult(response);
         }
@@ -118,6 +119,7 @@ namespace DungeonRollAlexa
                 case BuiltInIntent.Cancel:
                     {
                         string message = "Thank you for playing Dungeon Roll! If you enjoyed playing it, you should try Desolate. Say Alexa, enable Desolate Board Game, to play.";
+                        await _gameSession.SaveProgressToDb();
                         response = ResponseBuilder.Tell(message);
                         break;
                     }
@@ -130,6 +132,7 @@ namespace DungeonRollAlexa
 
                 case BuiltInIntent.Stop:
                     {
+                        await _gameSession.SaveProgressToDb();
                         string message = "Thank you for playing Dungeon Roll! If you enjoyed playing it, you should try Desolate. Say Alexa, enable Desolate Board Game, to play.";
                         response = ResponseBuilder.Tell(message);
                         break;

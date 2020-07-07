@@ -1803,7 +1803,10 @@ if(!Dungeon.HasChest)
             var attributes = new Dictionary<string, object>();
 
             attributes.Add("gameState", (int)GameState);
+            attributes.Add("LastgameState", (int)LastGameState);
             attributes.Add("lastResponseMessage", RepromptMessage);
+            attributes.Add("PreviousRepromptMessage", PreviousRepromptMessage);
+            attributes.Add("IsGameInProgress", IsGameInProgress);
             attributes.Add("heroSelectorIndex", HeroSelectorIndex);
             attributes.Add("RuleSelector", RuleSelector);
             if (Hero != null)
@@ -1841,8 +1844,11 @@ if(!Dungeon.HasChest)
             Dictionary<string, object> attributes = Session.Attributes;
 
             GameState = (GameState)Utilities.ParseInt(attributes["gameState"]);
+            LastGameState = (GameState)Utilities.ParseInt(attributes["LastgameState"]);
             RepromptMessage = attributes["lastResponseMessage"].ToString();
-            HeroSelectorIndex= Utilities.ParseInt(attributes["heroSelectorIndex"]);
+            PreviousRepromptMessage = attributes["PreviousRepromptMessage"].ToString();
+            IsGameInProgress = (bool)attributes["IsGameInProgress"];
+            HeroSelectorIndex = Utilities.ParseInt(attributes["heroSelectorIndex"]);
             RuleSelector = Utilities.ParseInt(attributes["RuleSelector"]);
 
             var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
@@ -2131,7 +2137,7 @@ if(!Dungeon.HasChest)
 
         public SkillResponse ChangeLog()
         {
-            string message = "Dungeon Roll Beta Version 1.1 Change log: Added the Alchemist, Archaeologist, Viking, and Tracker as new heroes. Say new game to start a new game, say rules for the rules, say help if you need help. ";
+            string message = "Dungeon Roll Beta Version 1.1 Change log: You can now track your high scores. Added the Alchemist, Archaeologist, Viking, and Tracker as new heroes. Say new game to start a new game, say rules for the rules, say help if you need help. ";
 
             return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }

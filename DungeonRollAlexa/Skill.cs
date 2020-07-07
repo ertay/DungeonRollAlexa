@@ -67,7 +67,7 @@ namespace DungeonRollAlexa
                     else
                     {
                         // Processes request according to intentRequest.Intent.Name...
-                        response = HandleUserIntents(intentRequest);
+                        response = await HandleUserIntents(intentRequest);
                     }
                 }
                 else if (request is SessionEndedRequest sessionEndedRequest)
@@ -82,6 +82,10 @@ namespace DungeonRollAlexa
                 response = ResponseBuilder.Tell(ex.Message);
                 response.Response.ShouldEndSession = false;
             }
+            // if score object is not null, we need to update high scores
+            if (_gameSession.PlayerScore != null)
+                await _gameSession.UpdateHighScores();
+
             await _gameSession.SaveProgressToDb();
 
             return new OkObjectResult(response);
@@ -135,7 +139,7 @@ namespace DungeonRollAlexa
             return (response != null, response);
         }
         
-        private static SkillResponse HandleUserIntents(IntentRequest request)
+        private static async Task<SkillResponse> HandleUserIntents(IntentRequest request)
         {
             SkillResponse response = null;
             
@@ -146,6 +150,9 @@ namespace DungeonRollAlexa
                     break;
                 case "ChangeLogIntent":
                     response = _gameSession.ChangeLog();
+                    break;
+                case "ScoresIntent":
+                    response = await _gameSession.GetHighScores();
                     break;
                 case "NewGameIntent":
                     //start a new game

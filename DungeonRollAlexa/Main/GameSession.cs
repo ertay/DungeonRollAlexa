@@ -8,6 +8,7 @@ using Amazon.Runtime;
 using DungeonRollAlexa.Extensions;
 using DungeonRollAlexa.Helpers;
 using DungeonRollAlexa.Main.GameObjects;
+using DungeonRollAlexa.Main.Scoring;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -54,6 +55,9 @@ namespace DungeonRollAlexa.Main
         public int RuleSelector { get; set; }
         public bool IsGameInProgress { get; set; }
 
+        [JsonIgnore]
+        public Score PlayerScore { get; set; }
+
         public GameSession() { }
         
         /// <summary>
@@ -88,7 +92,7 @@ namespace DungeonRollAlexa.Main
             }
             else
             {
-                message = $"Welcome to Dungeon Roll Beta. To begin, say new game. To learn how to play, say rules. Say help at any point during the game if you need help. Say about for more information about the game. ";
+                message = $"Welcome to Dungeon Roll Beta. To begin, say new game. To learn how to play, say rules. To check your high scores, say high scores. Say help at any point during the game if you need help. Say about for more information about the game. ";
                 GameState = GameState.MainMenu;
             }
             RepromptMessage = message;
@@ -633,28 +637,43 @@ if(!Dungeon.HasChest)
             // if hero was archaeologist, we need to discard six treasures
             if (Hero is ArchaeologistTombRaiderHero archaeologist)
                 archaeologist.DiscardTreasuresAtGameEnd();
-            int score = Hero.Experience;
-            Hero.Inventory.ForEach(i => score += i.ExperiencePoints); ;
+            PlayerScore = new Score();
+            PlayerScore.HeroType = Hero.HeroType;
+            PlayerScore.Points= Hero.Experience;
+            Hero.Inventory.ForEach(i => PlayerScore.Points += i.ExperiencePoints); ;
             // each dragon scale pair worth an additional two points
             int dragonScaleParis = Hero.Inventory.Count(i => i.TreasureType == TreasureType.DragonScales) / 2;
-            score += dragonScaleParis * 2;
+            PlayerScore.Points += dragonScaleParis * 2;
 
-            string rank, message;
+            string message;
 
-            if (score < 16)
-                rank = "Dragon Fodder";
-            else if (score < 24)
-                rank = "Village Hero";
-            else if (score < 30)
-                rank = "Seasoned Explorer";
-            else if (score < 35)
-                rank = "Champion";
-            else
-                rank = "Hero of Ages";
-
-            message = $"Your final score is {score}. <amazon:emotion name=\"excited\" intensity=\"medium\">Congratulations, you are now known as {rank}! To start a new game, say new game.</amazon:emotion> ";
+            message = $"Your final score is {PlayerScore.Points}. <amazon:emotion name=\"excited\" intensity=\"medium\">Congratulations, you are now known as {PlayerScore.Rank}! To start a new game, say new game.</amazon:emotion> ";
             
             return message;
+        }
+
+        public async Task UpdateHighScores()
+        {
+            // Load previous scores and then check if new high score
+            var scoreManager = new ScoreManager();
+            await scoreManager.LoadScoresFromDb(Session.User.UserId);
+            bool highScore = scoreManager.UpdateHighScore(PlayerScore);
+            if (highScore)
+            {
+                // we have new high score, save to db
+                await scoreManager.SaveScoresToDb(Session.User.UserId);
+                PlayerScore = null;
+            }
+        }
+
+        public async Task<SkillResponse> GetHighScores()
+        {
+            var sm = new ScoreManager();
+            string message = await sm.GetFormattedHighScores(Session.User.UserId);
+            
+            
+            
+            return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }
 
         public SkillResponse ConfirmFleeDungeon()
@@ -1848,7 +1867,7 @@ if(!Dungeon.HasChest)
                 item["UserId"] = Session.User.UserId;
                 item["GameSession"] = gameSessionJson;
 
-                await table.PutItemAsync(item);
+                await table.UpdateItemAsync(item);
                 Console.WriteLine("Saved to DynamoDB.");
                 success = true;
             }
@@ -1975,7 +1994,7 @@ if(!Dungeon.HasChest)
             switch (GameState)
             {
                 case GameState.MainMenu:
-                    message = "You are in the main menu. To start a new game, say new game. To listen to the game rules, say rules. Say help at any point in the game to learn about valid commands. Say about to get more information about the game. ";
+                    message = "You are in the main menu. To start a new game, say new game. To listen to the game rules, say rules. To check your high scores, say high scores. Say help at any point in the game to learn about valid commands. Say about to get more information about the game. ";
                     break;
                 case GameState.DetailedHeroSelection:
                     message = "You are in the hero selection phase. If you want to pick the hero that is presented, say yes. Otherwise, say no. ";

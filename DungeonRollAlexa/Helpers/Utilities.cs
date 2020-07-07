@@ -16,6 +16,38 @@ namespace DungeonRollAlexa.Helpers
             return new List<HeroType>() { HeroType.SpellswordBattlemage, HeroType.MercenaryCommander, HeroType.OccultistNecromancer, HeroType.KnightDragonSlayer, HeroType.MinstrelBard, HeroType.CrusaderPaladin, HeroType.HalfGoblinChieftain, HeroType.EnchantressBeguiler, HeroType.AlchemistThaumaturge, HeroType.TrackerRanger, HeroType.ArchaeologistTombRaider, HeroType.VikingUndeadViking};
                 }
 
+        public static string GetShortHeroName(HeroType hero)
+        {
+            switch (hero)
+            {
+                case HeroType.SpellswordBattlemage:
+                    return "Spellsword";
+                case HeroType.MercenaryCommander:
+                    return "Mercenary";
+                case HeroType.OccultistNecromancer:
+                    return "Occultist";
+                case HeroType.KnightDragonSlayer:
+                    return "Knight";
+                case HeroType.MinstrelBard:
+                    return "Minstrel";
+                case HeroType.CrusaderPaladin:
+                    return "Crusader";
+                case HeroType.HalfGoblinChieftain:
+                    return "Half Goblin";
+                case HeroType.EnchantressBeguiler:
+                    return "Enchantress";
+                case HeroType.AlchemistThaumaturge:
+                    return "Alchemist";
+                case HeroType.TrackerRanger:
+                    return "Tracker";
+                case HeroType.ArchaeologistTombRaider:
+                    return "Archaeologist";
+                case HeroType.VikingUndeadViking:
+                    return "Viking";
+            }
+            return "";
+        }
+
         public static List<TreasureItem> GenerateTreasureItems()
         {
             List<TreasureItem> list = new List<TreasureItem>()

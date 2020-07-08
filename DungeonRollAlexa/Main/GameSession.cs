@@ -943,7 +943,7 @@ if(!Dungeon.HasChest)
             if(Dungeon.NumberOfDelves > 2)
             {
                 gameOver = true;
-                RepromptMessage += CalculateFinalScore();
+                RepromptMessage = CalculateFinalScore();
                 message += RepromptMessage;
                 GameState = GameState.MainMenu;
             }

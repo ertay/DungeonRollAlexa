@@ -2130,7 +2130,8 @@ if(!Dungeon.HasChest)
 
         public SkillResponse AboutGame()
         {
-            string message = "Dungeon Roll Beta Version 1.1. This is a fanmade Alexa implementation of the board game created by Ertay Shashko. The original board game is designed by Chris Darden, and published by Tasty Minstrel Games. This Alexa variant was created to make the game fully accessible to blind players. If you like the game, you can buy the physical board game. If you have any questions or comments about the game, you can get in touch by sending an email to SightlessFun@outlook.com. To start a new game, say new game. To learn how to play, say rules. ";
+            string message = "Dungeon Roll Beta version 1.1, created by Ertay Shashko. This is a fanmade Alexa adaptation of Dungeon Roll, a board game designed by Chris Darden, and published by Tasty Minstrel Games. This Alexa variant was created to make the game fully accessible to blind players. If you like the game, you can buy the physical board game. If you have any questions or comments about the game, you can get in touch by sending an email to SightlessFun@outlook.com. Special thanks to Christopher Lehman for becoming a Guardian on the Sightless Fun Patreon to support this and other Alexa projects. To find out more about Sightless Fun and other Alexa games that are adapted from Board Games, check out www.sightless.fun. To start a new game, say new game. To learn how to play, say rules. ";
+            
 
             return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }

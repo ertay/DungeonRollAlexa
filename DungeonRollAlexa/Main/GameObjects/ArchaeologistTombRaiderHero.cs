@@ -6,7 +6,7 @@ namespace DungeonRollAlexa.Main.GameObjects
 {
     public class ArchaeologistTombRaiderHero : Hero
     {
-        public override string SpecialtyInformation => "Acquire two treasure items when forming a party, but discard six treasure items at game end. ";
+        public override string SpecialtyInformation => "Acquire two treasure items when forming a party, but six least valuable treasure items are discarded at game end. ";
 
         public override string UltimateInformation => IsLeveledUp ? "Your ultimate ability is Treasure Seeker which lets you draw two treasure items, and then discard one treasure item. Say Treasure Seeker to use it. " : "Your ultimate ability is Treasure Seeker which lets you draw two treasure items, and then discard two treasure items. Say Treasure Seeker to use it. ";
 

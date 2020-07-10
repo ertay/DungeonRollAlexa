@@ -31,7 +31,6 @@ namespace DungeonRollAlexa.Main
             get { return _repromptMessage; }
             set
             {
-                PreviousRepromptMessage = _repromptMessage;
                 _repromptMessage = value;
             }
         }
@@ -43,7 +42,6 @@ namespace DungeonRollAlexa.Main
             get { return _gameState; }
             set
             {
-                LastGameState = _gameState;
                 _gameState = value;
             }
         }
@@ -1809,7 +1807,7 @@ if(!Dungeon.HasChest)
             attributes.Add("IsGameInProgress", IsGameInProgress);
             attributes.Add("heroSelectorIndex", HeroSelectorIndex);
             attributes.Add("RuleSelector", RuleSelector);
-            var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto };
+            var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All};
             if (Hero != null)
             {
                 attributes.Add("hero", JsonConvert.SerializeObject(Hero, settings));
@@ -1851,7 +1849,7 @@ if(!Dungeon.HasChest)
             HeroSelectorIndex = Utilities.ParseInt(attributes["heroSelectorIndex"]);
             RuleSelector = Utilities.ParseInt(attributes["RuleSelector"]);
 
-            var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto};
+            var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All};
             Hero = JsonConvert.DeserializeObject<Hero>(attributes["hero"].ToString(), settings);
             Dungeon = JsonConvert.DeserializeObject<Dungeon>(attributes["dungeon"].ToString(), settings);
 
@@ -1860,8 +1858,13 @@ if(!Dungeon.HasChest)
         public async Task<bool> SaveProgressToDb()
         {
             bool success = false;
+            if (GameState != GameState.ContinuePrompt)
+            {
+                LastGameState = GameState;
+                PreviousRepromptMessage = RepromptMessage;
+            }
             // prepare the gamesession that will be stored in DynamoDb
-            var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto };
+            var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
             string gameSessionJson = JsonConvert.SerializeObject(this, settings);
             var credentials = new BasicAWSCredentials(Environment.GetEnvironmentVariable("AWSAccessId"), Environment.GetEnvironmentVariable("AWSAccessSecret"));
             
@@ -1901,7 +1904,7 @@ if(!Dungeon.HasChest)
                 }
 
                 string gameSessionJson = item["GameSession"];
-                var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto };
+                var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
                 var gameSession = JsonConvert.DeserializeObject<GameSession>(gameSessionJson, settings);
 
                 // restore the properties

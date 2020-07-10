@@ -1809,9 +1809,9 @@ if(!Dungeon.HasChest)
             attributes.Add("IsGameInProgress", IsGameInProgress);
             attributes.Add("heroSelectorIndex", HeroSelectorIndex);
             attributes.Add("RuleSelector", RuleSelector);
+            var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto };
             if (Hero != null)
             {
-                var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
                 attributes.Add("hero", JsonConvert.SerializeObject(Hero, settings));
             }
             else
@@ -1821,7 +1821,7 @@ if(!Dungeon.HasChest)
 
             if (Dungeon != null)
             {
-                attributes.Add("dungeon", JsonConvert.SerializeObject(Dungeon));
+                attributes.Add("dungeon", JsonConvert.SerializeObject(Dungeon, settings));
             }
             else
             {
@@ -1851,9 +1851,9 @@ if(!Dungeon.HasChest)
             HeroSelectorIndex = Utilities.ParseInt(attributes["heroSelectorIndex"]);
             RuleSelector = Utilities.ParseInt(attributes["RuleSelector"]);
 
-            var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
+            var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto};
             Hero = JsonConvert.DeserializeObject<Hero>(attributes["hero"].ToString(), settings);
-            Dungeon = JsonConvert.DeserializeObject<Dungeon>(attributes["dungeon"].ToString());
+            Dungeon = JsonConvert.DeserializeObject<Dungeon>(attributes["dungeon"].ToString(), settings);
 
         }
 
@@ -1861,7 +1861,7 @@ if(!Dungeon.HasChest)
         {
             bool success = false;
             // prepare the gamesession that will be stored in DynamoDb
-            var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
+            var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto };
             string gameSessionJson = JsonConvert.SerializeObject(this, settings);
             var credentials = new BasicAWSCredentials(Environment.GetEnvironmentVariable("AWSAccessId"), Environment.GetEnvironmentVariable("AWSAccessSecret"));
             
@@ -1901,7 +1901,7 @@ if(!Dungeon.HasChest)
                 }
 
                 string gameSessionJson = item["GameSession"];
-                var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
+                var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto };
                 var gameSession = JsonConvert.DeserializeObject<GameSession>(gameSessionJson, settings);
 
                 // restore the properties

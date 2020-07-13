@@ -90,7 +90,7 @@ namespace DungeonRollAlexa.Main
             }
             else
             {
-                message = $"Welcome to Dungeon Roll Beta. To begin, say new game. To learn how to play, say rules. To check your high scores, say high scores. Say help at any point during the game if you need help. Say about for more information about the game. ";
+                message = $"Welcome to Dungeon Roll. To begin, say new game. To learn how to play, say rules. To check your high scores, say high scores. Say help at any point during the game if you need help. Say about for more information about the game. ";
                 GameState = GameState.MainMenu;
             }
             RepromptMessage = message;
@@ -2133,7 +2133,7 @@ if(!Dungeon.HasChest)
 
         public SkillResponse AboutGame()
         {
-            string message = "Dungeon Roll Beta version 1.1, created by Ertay Shashko. This is a fanmade Alexa adaptation of Dungeon Roll, a board game designed by Chris Darden, and published by Tasty Minstrel Games. This Alexa variant was created to make the game fully accessible to blind players. If you like the game, you can buy the physical board game. If you have any questions or comments about the game, you can get in touch by sending an email to SightlessFun@outlook.com. Special thanks to Christopher Lehman for becoming a Guardian on the Sightless Fun Patreon to support this and other Alexa projects. To find out more about Sightless Fun and other Alexa games that are adapted from Board Games, check out www.sightless.fun. To start a new game, say new game. To learn how to play, say rules. ";
+            string message = "Dungeon Roll version 1.1, created by Ertay Shashko. This is a fanmade Alexa adaptation of Dungeon Roll, a board game designed by Chris Darden, and published by Tasty Minstrel Games. This Alexa variant was created to make the game fully accessible to blind players. If you like the game, you can buy the physical board game. If you have any questions or comments about the game, you can get in touch by sending an email to SightlessFun@outlook.com. Special thanks to Christopher Lehman for becoming a Guardian on the Sightless Fun Patreon to support this and other Alexa projects. To find out more about Sightless Fun and other Alexa games that are adapted from Board Games, check out www.sightless.fun. To start a new game, say new game. To learn how to play, say rules. ";
             
 
             return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
@@ -2141,7 +2141,7 @@ if(!Dungeon.HasChest)
 
         public SkillResponse ChangeLog()
         {
-            string message = "Dungeon Roll Beta Version 1.1 Change log: You can now track your high scores. Added the Alchemist, Archaeologist, Viking, and Tracker as new heroes. Say new game to start a new game, say rules for the rules, say help if you need help. ";
+            string message = "Dungeon Roll Version 1.1 Change log: You can now track your high scores. Added the Alchemist, Archaeologist, Viking, and Tracker as new heroes. Say new game to start a new game, say rules for the rules, say help if you need help. ";
 
             return ResponseCreator.Ask(message, RepromptBuilder.Create(RepromptMessage), Session);
         }

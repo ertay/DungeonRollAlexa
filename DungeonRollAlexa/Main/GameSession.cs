@@ -1831,27 +1831,37 @@ if(!Dungeon.HasChest)
 
         private void LoadData()
         {
-            if (Session == null)
+          
+            try
             {
-                throw new NullReferenceException("Session not initialized. Cannot load data.");
+                if (Session == null)
+                {
+                    throw new NullReferenceException("Session not initialized. Cannot load data.");
+                }
+
+                if (Session.Attributes.Count < 1)
+                    return;
+
+                Dictionary<string, object> attributes = Session.Attributes;
+
+                GameState = (GameState)Utilities.ParseInt(attributes["gameState"]);
+                LastGameState = (GameState)Utilities.ParseInt(attributes["LastgameState"]);
+                RepromptMessage = attributes["lastResponseMessage"].ToString();
+                PreviousRepromptMessage = attributes["PreviousRepromptMessage"].ToString();
+                IsGameInProgress = (bool)attributes["IsGameInProgress"];
+                HeroSelectorIndex = Utilities.ParseInt(attributes["heroSelectorIndex"]);
+                RuleSelector = Utilities.ParseInt(attributes["RuleSelector"]);
+
+                var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
+
+                Hero = JsonConvert.DeserializeObject<Hero>(attributes["hero"].ToString(), settings);
+                Dungeon = JsonConvert.DeserializeObject<Dungeon>(attributes["dungeon"].ToString(), settings);
             }
-
-            if (Session.Attributes.Count < 1)
-                return;
-
-            Dictionary<string, object> attributes = Session.Attributes;
-
-            GameState = (GameState)Utilities.ParseInt(attributes["gameState"]);
-            LastGameState = (GameState)Utilities.ParseInt(attributes["LastgameState"]);
-            RepromptMessage = attributes["lastResponseMessage"].ToString();
-            PreviousRepromptMessage = attributes["PreviousRepromptMessage"].ToString();
-            IsGameInProgress = (bool)attributes["IsGameInProgress"];
-            HeroSelectorIndex = Utilities.ParseInt(attributes["heroSelectorIndex"]);
-            RuleSelector = Utilities.ParseInt(attributes["RuleSelector"]);
-
-            var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All};
-            Hero = JsonConvert.DeserializeObject<Hero>(attributes["hero"].ToString(), settings);
-            Dungeon = JsonConvert.DeserializeObject<Dungeon>(attributes["dungeon"].ToString(), settings);
+            catch (Exception ex)
+            {
+                // this shouldn't happen
+            }
+            
 
         }
 

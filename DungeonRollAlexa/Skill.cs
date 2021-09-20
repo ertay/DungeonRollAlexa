@@ -35,7 +35,7 @@ namespace DungeonRollAlexa
                 return new BadRequestResult();
             }
 
-            bool isFirstRequest = skillRequest.Session.Attributes == null ? true : false;
+            bool isFirstRequest = skillRequest.Session.Attributes.Count < 1 ? true : false;
             // setup game session
             _gameSession = new GameSession(skillRequest.Session);
             

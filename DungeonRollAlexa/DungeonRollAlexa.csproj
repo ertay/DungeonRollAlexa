@@ -6,9 +6,9 @@
     <RootNamespace>DungeonRollAlexa</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Alexa.NET" Version="1.13.3" />
+    <PackageReference Include="Alexa.NET" Version="1.17.0" />
     <PackageReference Include="Alexa.NET.LocaleSpeech" Version="1.0.0" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.105.18" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.0.69" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.6" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>

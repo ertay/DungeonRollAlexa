@@ -67,7 +67,7 @@ namespace DungeonRollAlexa.Main
             Session = session;
             
             // initialize attributes
-            if(Session.Attributes == null)
+            if(Session.Attributes == null || Session.Attributes.Count < 1)
             {
                 // new session, attributes are null, create them
                 Session.Attributes = new Dictionary<string, object>();
